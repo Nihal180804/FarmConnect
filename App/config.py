@@ -5,7 +5,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'database': 'localfarmermanagement',
     'user': 'root',
-    'password': '2004jnjnihal'  # Add your MySQL password here
+    'password': ''  # Add your MySQL password here
 }
 
 # Application Settings
