@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto space-y-6">
+  
+  <!-- Back Button -->
+  <div>
+    <a href="{{ url_for('customer.orders') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-primary transition-colors">
+      <i class="fas fa-arrow-left"></i>
+      <span class="font-medium">Back to Orders</span>
+    </a>
+  </div>
+
+  <!-- Order Header -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+    <div class="flex items-start justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          Order #{{ order.OrderID }}
+        </h1>
+        <p class="text-gray-600">
+          Placed on {{ order.OrderDate.strftime('%B %d, %Y at %I:%M %p') if order.OrderDate else 'N/A' }}
+        </p>
+      </div>
+      <div>
+        <span class="px-4 py-2 rounded-full text-sm font-semibold {{ 
+          'bg-green-100 text-green-700' if order.Status == 'Delivered' 
+          else 'bg-blue-100 text-blue-700' if order.Status == 'Processing'
+          else 'bg-yellow-100 text-yellow-700' if order.Status == 'Shipped'
+          else 'bg-orange-100 text-orange-700' if order.Status == 'Pending'
+          else 'bg-gray-100 text-gray-700'
+        }}">
+          {{ order.Status if order.Status else 'Pending' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Customer & Delivery Info -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8 pb-8 border-b border-gray-200">
+      <div class="bg-amber-50 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <i class="fas fa-user text-primary"></i>
+          Customer Information
+        </h3>
+        <p class="text-gray-900 font-medium">{{ order.CustomerName }}</p>
+        <p class="text-gray-600 text-sm mt-1">{{ order.CustomerLocation }}</p>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="mb-8">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">Order Items</h3>
+      <div class="space-y-4">
+        {% for item in order_items %}
+        <div class="bg-gray-50 rounded-lg p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h4 class="text-lg font-semibold text-gray-900">{{ item.ProductName }}</h4>
+              <p class="text-gray-600 text-sm mt-1">Quantity: {{ item.Quantity }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-600">Unit Price</p>
+              <p class="text-lg font-bold text-gray-900">₹{{ "%.2f"|format(item.UnitPrice) }}</p>
+            </div>
+          </div>
+          <div class="border-t border-gray-200 pt-3 mt-3">
+            <div class="flex justify-between text-gray-700">
+              <span>Subtotal</span>
+              <span class="font-semibold">₹{{ "%.2f"|format(item.UnitPrice * item.Quantity) }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Order Total -->
+        <div class="bg-white border-2 border-primary/20 rounded-lg p-6">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Subtotal</span>
+            <span>₹{{ "%.2f"|format(order.TotalAmount) }}</span>
+          </div>
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Shipping</span>
+            <span>₹0.00</span>
+          </div>
+          <div class="flex justify-between text-sm text-gray-600 mb-4">
+            <span>Tax</span>
+            <span>₹0.00</span>
+          </div>
+          <div class="flex justify-between text-xl font-bold text-gray-900 pt-4 border-t border-gray-300">
+            <span>Total Amount</span>
+            <span class="text-primary">₹{{ "%.2f"|format(order.TotalAmount) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-4">
+      <a href="{{ url_for('customer.download_invoice', order_id=order.OrderID) }}" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-lg transition-all text-center flex items-center justify-center gap-2">
+        <i class="fas fa-download"></i>
+        Download Invoice
+      </a>
+      <a href="{{ url_for('customer.shop') }}" class="flex-1 bg-amber-200 hover:bg-amber-300 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+        <i class="fas fa-shopping-cart"></i>
+        Continue Shopping
+      </a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

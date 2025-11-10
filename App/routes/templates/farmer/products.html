@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header with Add Button -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-4xl font-bold text-gray-900">My Products</h1>
+      <p class="text-gray-700 mt-2">Manage your product inventory</p>
+    </div>
+    <a href="{{ url_for('farmer.add_product') }}" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg">
+      <i class="fas fa-plus"></i> Add Product
+    </a>
+  </div>
+
+  <!-- Products Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Product Name</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Category</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Season</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Freshness</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Avg Rating</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Orders</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for product in products %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-gray-900 font-semibold">{{ product.ProductName or 'N/A' }}</td>
+            <td class="px-6 py-4 text-gray-700 text-sm">{{ product.Category or 'N/A' }}</td>
+            <td class="px-6 py-4 text-gray-700 text-sm">
+              <span class="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">
+                {{ product.Season or 'N/A' }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="product-price-{{ product.ProductID }} text-gray-900 font-semibold">₹{{ "%.2f"|format(product.Price|float) }}</span>
+              <input type="hidden" class="product-price-input-{{ product.ProductID }}" value="{{ product.Price }}">
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-semibold">
+                {{ product.Freshness or 'Fresh' }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              {% if product.avg_rating %}
+                <span class="text-yellow-500"><i class="fas fa-star"></i></span> <span class="text-gray-900 font-semibold">{{ "%.1f"|format(product.avg_rating|float) }}</span>
+              {% else %}
+                <span class="text-gray-500">-</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-bold">
+                {{ product.total_orders or 0 }}
+              </span>
+            </td>
+            <td class="px-6 py-4 space-x-2 flex">
+              <button class="px-2 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors text-sm" onclick="editPrice({{ product.ProductID }})" title="Edit Price"><i class="fas fa-pencil"></i></button>
+              <form method="post" action="{{ url_for('farmer.delete_product', product_id=product.ProductID) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button class="px-2 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm" type="submit" onclick="return confirm('Delete this product?')" title="Delete"><i class="fas fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="px-6 py-12 text-center">
+              <div class="space-y-4">
+                <i class="fas fa-box-open text-4xl text-gray-300"></i>
+                <p class="text-gray-600 text-lg">No products added yet</p>
+                <a href="{{ url_for('farmer.add_product') }}" class="inline-block px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all">
+                  <i class="fas fa-plus mr-2"></i>Add Your First Product
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Price Edit Modal -->
+<div id="editPriceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-xl border border-gray-200 w-96 shadow-2xl">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-xl font-bold text-gray-900">Edit Product Price</h3>
+      <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+    </div>
+    <form method="post" action="{{ url_for('farmer.edit_price') }}" id="editPriceForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="p-6 space-y-4">
+        <input type="hidden" name="product_id" id="editProductId">
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">New Price (₹)</label>
+          <input type="number" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" name="price" id="editPrice" step="0.01" required>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-200 flex gap-3 justify-end">
+        <button type="button" onclick="closeEditModal()" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-900 rounded-lg font-semibold transition-colors">Cancel</button>
+        <button type="submit" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg font-semibold transition-all">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Restock Modal -->
+<div id="restockModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-xl border border-gray-200 w-96 shadow-2xl">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-xl font-bold text-gray-900">Restock Product</h3>
+      <button onclick="closeRestockModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+    </div>
+
+<script>
+// Price Edit Modal Functions
+function editPrice(productId) {
+  const currentPrice = document.querySelector('.product-price-input-' + productId).value;
+  document.getElementById('editProductId').value = productId;
+  document.getElementById('editPrice').value = currentPrice;
+  document.getElementById('editPriceModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('editPriceModal').classList.add('hidden');
+}
+
+// Handle Price Edit Form
+document.getElementById('editPriceForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const productId = formData.get('product_id');
+  const newPrice = formData.get('price');
+  
+  fetch("{{ url_for('farmer.edit_price') }}", {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: new URLSearchParams(formData)
+  }).then(r => r.json()).then(j => {
+    if (j.success) {
+      document.querySelector('.product-price-' + productId).innerText = '₹' + parseFloat(newPrice).toFixed(2);
+      closeEditModal();
+      alert('Price updated successfully');
+      location.reload();
+    } else {
+      alert('Error: ' + j.message);
+    }
+  });
+});
+
+// Close modals when clicking outside
+document.getElementById('editPriceModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeEditModal();
+  }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#E8F5E9"/>
+  <g opacity="0.5">
+    <path d="M70 80C70 60 85 45 100 45C115 45 130 60 130 80C130 100 115 110 100 120C85 110 70 100 70 80Z" fill="#4CAF50"/>
+    <path d="M90 110C90 115 95 120 100 120C105 120 110 115 110 110V100H90V110Z" fill="#8BC34A"/>
+  </g>
+  <text x="100" y="150" font-size="24" text-anchor="middle" fill="#66BB6A" font-family="Arial">Fresh Produce</text>
+</svg>

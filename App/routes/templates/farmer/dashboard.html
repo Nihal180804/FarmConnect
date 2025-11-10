@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900">Farmer Dashboard</h1>
+    <p class="text-gray-700 mt-2">Welcome back!</p>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Products -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Products</h3>
+      <div class="text-4xl font-bold text-emerald-600">{{ overview.TotalProducts or 0 }}</div>
+      <p class="text-gray-600 text-sm mt-2">Products listed</p>
+    </div>
+
+    <!-- Total Orders -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Orders</h3>
+      <div class="text-4xl font-bold text-blue-600">{{ overview.TotalOrders or 0 }}</div>
+      <p class="text-gray-600 text-sm mt-2">Orders received</p>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Revenue</h3>
+      <div class="text-3xl font-bold text-emerald-600">₹{{ overview.TotalRevenue or '0.00' }}</div>
+      <p class="text-gray-600 text-sm mt-2">Revenue generated</p>
+    </div>
+
+    <!-- Average Rating -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Avg. Rating</h3>
+      <div class="text-4xl font-bold text-yellow-600">{{ overview.AverageProductRating or '0.0' }} ★</div>
+      <p class="text-gray-600 text-sm mt-2">Product rating</p>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Products Chart -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Top Products</h3>
+      <canvas id="topProductsChart" height="120"></canvas>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Quick Stats</h3>
+      <div class="space-y-4">
+        <div class="flex justify-between items-center pb-3 border-b border-amber-200">
+          <span class="text-gray-700">Best Selling Product</span>
+          <span class="font-bold text-emerald-600">{% if products %}{{ products[0].ProductName }}{% else %}N/A{% endif %}</span>
+        </div>
+        <div class="flex justify-between items-center pb-3 border-b border-amber-200">
+          <span class="text-gray-700">Highest Revenue</span>
+          <span class="font-bold text-emerald-600">₹{% if products %}{{ products[0].ProductRevenue }}{% else %}0{% endif %}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-700">Active Listings</span>
+          <span class="font-bold text-blue-600">{{ overview.TotalProducts or 0 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-amber-200">
+      <h3 class="text-xl font-bold text-gray-900">Products Table</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Product</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Units Sold</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Revenue</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-amber-200">
+          {% for p in products %}
+          <tr class="hover:bg-amber-50 transition-colors">
+            <td class="px-6 py-4 text-gray-900 font-medium">{{ p.ProductName }}</td>
+            <td class="px-6 py-4 text-gray-900">₹{{ p.Price }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ p.TotalUnitsSold }}</td>
+            <td class="px-6 py-4 text-gray-900 font-bold">₹{{ p.ProductRevenue }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const ctx = document.getElementById('topProductsChart').getContext('2d');
+  const labels = {{ products|map(attribute='ProductName')|list|tojson }};
+  const data = {{ products|map(attribute='ProductRevenue')|list|tojson }};
+  new Chart(ctx, {
+    type: 'bar',
+    data: { 
+      labels, 
+      datasets:[{ 
+        label:'Revenue (₹)', 
+        data,
+        backgroundColor: '#10b981',
+        borderColor: '#059669',
+        borderWidth: 2
+      }]
+    },
+    options: { 
+      responsive:true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#111827',
+            font: { weight: 'bold' }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: { color: '#111827' },
+          grid: { color: '#fed7aa' }
+        },
+        x: {
+          ticks: { color: '#111827' },
+          grid: { color: '#fed7aa' }
+        }
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}

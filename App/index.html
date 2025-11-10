@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshCart - Your Local Grocery</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#22c55e', // green-500
+                            hover: '#16a34a', // green-600
+                            light: '#dcfce7', // green-100
+                        },
+                        secondary: '#f97316', // orange-500
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        #cart-sidebar {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE */
+        }
+        #cart-sidebar::-webkit-scrollbar { 
+            display: none;  /* Chrome, Safari */
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+
+    <!-- App Container -->
+    <div id="app" class="relative">
+
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-auto text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19.5v-15A2.5 2.5 0 0 1 8.5 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8.5A2.5 2.5 0 0 1 6 19.5Z"/><path d="M12 7v6"/><path d="m15 10-3-3-3 3"/></svg>
+                        <span class="font-bold text-2xl text-gray-800 ml-2">FreshCart</span>
+                    </div>
+
+                    <!-- Desktop Nav -->
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="#" class="inline-flex items-center px-1 pt-1 border-b-2 border-primary text-base font-semibold text-gray-900">Home</a>
+                        <a href="#shop" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Shop</a>
+                        <a href="#categories" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Categories</a>
+                    </div>
+
+                    <!-- Right Icons -->
+                    <div class="flex items-center">
+                        <button id="cart-button" class="relative p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            
+            <!-- Hero Section -->
+            <section class="bg-gradient-to-r from-primary-light to-green-50 rounded-2xl shadow-lg overflow-hidden mb-16">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="p-8 md:p-12 lg:p-16 md:w-1/2">
+                        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+                            Fresh Groceries<br>Delivered to Your Door
+                        </h1>
+                        <p class="mt-4 text-lg text-gray-600">
+                            The best quality produce, sourced directly from local farmers.
+                        </p>
+                        <a href="#shop" class="mt-8 inline-block bg-primary text-white text-lg font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-primary-hover transition-all duration-300 transform hover:-translate-y-1">
+                            Start Shopping
+                        </a>
+                    </div>
+                    <div class="md:w-1/2 h-64 md:h-auto">
+                        <img 
+                            src="https://placehold.co/800x600/22c55e/ffffff?text=Fresh+Vegetables&font=inter" 
+                            alt="Fresh Vegetables" 
+                            class="w-full h-full object-cover"
+                            onerror="this.src='https://placehold.co/800x600/22c55e/ffffff?text=Fresh+Produce&font=inter'"
+                        >
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section id="categories" class="mb-16">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Shop by Category</h2>
+                <div id="category-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <!-- Category cards will be injected here -->
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="shop">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8">Featured Products</h2>
+                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Product cards will be injected here by JavaScript -->
+                    <p id="products-loading" class="text-gray-500 text-center col-span-full">Loading products...</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-gray-300 mt-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <p class="text-center text-sm">&copy; 2025 FreshCart. All rights reserved. Built with Flask & Tailwind.</p>
+            </div>
+        </footer>
+
+        <!-- Shopping Cart Sidebar -->
+        <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden" onclick="toggleCart()"></div>
+        <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+            <!-- Cart Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h2 class="text-2xl font-bold text-gray-800">Your Cart</h2>
+                <button onclick="toggleCart()" class="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <!-- Cart Items -->
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <p id="cart-empty-msg" class="text-gray-500 text-center mt-8">Your cart is empty.</p>
+            </div>
+
+            <!-- Cart Footer -->
+            <div class="p-6 border-t bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold text-gray-800">Subtotal:</span>
+                    <span id="cart-total" class="text-2xl font-bold text-gray-900">₹0.00</span>
+                </div>
+                <button class="w-full bg-primary text-white text-lg font-semibold py-3 rounded-xl shadow-md hover:bg-primary-hover transition-all duration-300" onclick="placeOrder()">
+                    Place Order
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Message Modal -->
+        <div id="message-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="hideMessage()"></div>
+            <div id="message-content" class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all sm:max-w-lg sm:w-full">
+                <div class="p-6 text-center">
+                    <div id="message-icon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary-light">
+                        <!-- Icon will be set by JS -->
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-900 mt-4" id="message-title">Message</h3>
+                    <p class="mt-2 text-base text-gray-600" id="message-text">This is a demo.</p>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 text-center">
+                    <button type="button" class="inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2 bg-primary text-base font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:text-sm" onclick="hideMessage()">
+                        Got it!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Config ---
+        const API_BASE_URL = 'http://127.0.0.1:5000/api'; // This must match your Flask backend address
+        const CUSTOMER_ID_FOR_DEMO = 1; // Hard-coded to 'Arjun Patel' (CustomerID 1) for this demo
+
+        // --- Mock Data (for images/categories) ---
+        // We'll get products from the API, but add images here
+        const productImages = {
+            'Tomato': 'https://placehold.co/600x400/ef4444/ffffff?text=Tomato&font=inter',
+            'Mango': 'https://placehold.co/600x400/f97316/ffffff?text=Mango&font=inter',
+            'Milk (1L)': 'https://placehold.co/600x400/3b82f6/ffffff?text=Milk&font=inter',
+            'Rice (Sona Masoori)': 'https://placehold.co/600x400/eab308/ffffff?text=Rice&font=inter',
+            'Organic Tomato': 'https://placehold.co/600x400/8b5cf6/ffffff?text=Organic+Tomato&font=inter',
+            'Banana': 'https://placehold.co/600x400/fde047/ffffff?text=Banana&font=inter',
+            'Paneer (200g)': 'https://placehold.co/600x400/60a5fa/ffffff?text=Paneer&font=inter',
+            'Spinach': 'https://placehold.co/600x400/16a34a/ffffff?text=Spinach&font=inter',
+            'Apple': 'https://placehold.co/600x400/dc2626/ffffff?text=Apple&font=inter',
+            'Honey (250g)': 'https://placehold.co/600x400/f59e0b/ffffff?text=Honey&font=inter',
+            'Carrot': 'https://placehold.co/600x400/f97316/ffffff?text=Carrot&font=inter',
+            'Farm Eggs (12)': 'https://placehold.co/600x400/fbbf24/ffffff?text=Eggs&font=inter'
+        };
+        const defaultImage = 'https://placehold.co/600x400/a0e0a0/333?text=Produce&font=inter';
+        
+        const categories = [
+            { name: 'Vegetables', img: 'https://placehold.co/100x100/a0e0a0/333?text=Veggies', color: 'bg-green-100', hover: 'group-hover:bg-green-500' },
+            { name: 'Fruits', img: 'https://placehold.co/100x100/fecaca/333?text=Fruits', color: 'bg-red-100', hover: 'group-hover:bg-red-500' },
+            { name: 'Dairy', img: 'https://placehold.co/100x100/dbeafe/333?text=Dairy', color: 'bg-blue-100', hover: 'group-hover:bg-blue-500' },
+            { name: 'Grains', img: 'https://placehold.co/100x100/fef08a/333?text=Grains', color: 'bg-yellow-100', hover: 'group-hover:bg-yellow-500' },
+            { name: 'Organic', img: 'https://placehold.co/100x100/e9d5ff/333?text=Organic', color: 'bg-purple-100', hover: 'group-hover:bg-purple-500' },
+        ];
+
+        // --- Shopping Cart State ---
+        let cart = [];
+        let allProducts = []; // To store products fetched from API
+
+        // --- DOM Elements ---
+        const productGrid = document.getElementById('product-grid');
+        const productsLoading = document.getElementById('products-loading');
+        const categoryGrid = document.getElementById('category-grid');
+        const cartButton = document.getElementById('cart-button');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalEl = document.getElementById('cart-total');
+        const cartCountEl = document.getElementById('cart-count');
+        const cartEmptyMsg = document.getElementById('cart-empty-msg');
+        const messageModal = document.getElementById('message-modal');
+        const messageTitle = document.getElementById('message-title');
+        const messageText = document.getElementById('message-text');
+        const messageIcon = document.getElementById('message-icon');
+
+        // --- Functions ---
+
+        /**
+         * Fetch products from the backend API
+         */
+        async function fetchProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/products`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const products = await response.json();
+                allProducts = products; // Store for later use
+                renderProducts(products);
+                productsLoading.style.display = 'none';
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+                productsLoading.innerText = "Failed to load products. Make sure the backend server (app.py) is running.";
+            }
+        }
+
+        /**
+         * Render all products to the grid
+         */
+        function renderProducts(products) {
+            productGrid.innerHTML = ''; // Clear existing
+            products.forEach(product => {
+                const imageUrl = productImages[product.ProductName] || defaultImage;
+                productGrid.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col transition-all duration-300 transform hover:shadow-xl hover:-translate-y-1">
+                    <div class="relative">
+                        <img 
+                            src="${imageUrl}" 
+                            alt="${product.ProductName}" 
+                            class="w-full h-56 object-cover"
+                            onerror="this.src='${defaultImage}'"
+                        >
+                        <div class="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-700">${product.CategoryName}</div>
+                    </div>
+                    <div class="p-5 flex flex-col flex-1">
+                        <h3 class="text-xl font-bold text-gray-800">${product.ProductName}</h3>
+                        <p class="text-sm text-gray-500 mt-1">from ${product.FarmerName}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-2xl font-bold text-gray-900">₹${product.Price.toFixed(2)}</span>
+                            <span class="font-semibold text-yellow-500">${product.AverageRating.toFixed(1)} ⭐</span>
+                        </div>
+                        <button 
+                            class="w-full mt-6 bg-primary-light text-primary font-bold py-3 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                            onclick="addToCart(${product.ProductID})"
+                        >
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+        }
+        
+        /**
+         * Render category cards
+         */
+        function renderCategories() {
+            categoryGrid.innerHTML = '';
+            categories.forEach(cat => {
+                categoryGrid.innerHTML += `
+                <a href="#shop" class="group block text-center bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="w-24 h-24 ${cat.color} rounded-full mx-auto flex items-center justify-center ${cat.hover} transition-all duration-300">
+                        <img src="${cat.img}" alt="${cat.name}" class="w-16 h-16 rounded-full" onerror="this.src='${defaultImage}'"/>
+                    </div>
+                    <h3 class="mt-4 text-lg font-semibold text-gray-800">${cat.name}</h3>
+                </a>
+                `;
+            });
+        }
+
+        /**
+         * Show/Hide the shopping cart sidebar
+         */
+        function toggleCart() {
+            cartOverlay.classList.toggle('hidden');
+            cartSidebar.classList.toggle('translate-x-full');
+        }
+
+        /**
+         * Add a product to the cart
+         */
+        function addToCart(productId) {
+            const product = allProducts.find(p => p.ProductID === productId);
+            if (!product) return; // Safety check
+            
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ 
+                    id: product.ProductID, 
+                    name: product.ProductName,
+                    price: product.Price,
+                    image: productImages[product.ProductName] || defaultImage,
+                    quantity: 1 
+                });
+            }
+            
+            updateCartUI();
+            toggleCart(); // Open cart on add
+        }
+
+        /**
+         * Remove an item from the cart
+         */
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartUI();
+        }
+
+        /**
+         * Update cart item quantity
+         */
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    updateCartUI();
+                }
+            }
+        }
+
+        /**
+         * Update the cart UI (sidebar, total, count)
+         */
+        function updateCartUI() {
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = ''; // Clear items
+                cartEmptyMsg.classList.remove('hidden');
+                cartTotalEl.innerText = '₹0.00';
+                cartCountEl.classList.add('hidden');
+                cartCountEl.innerText = '0';
+            } else {
+                cartEmptyMsg.classList.add('hidden');
+                cartItemsContainer.innerHTML = '';
+                let total = 0;
+                let count = 0;
+
+                cart.forEach(item => {
+                    total += item.price * item.quantity;
+                    count += item.quantity;
+                    cartItemsContainer.innerHTML += `
+                    <div class="flex items-center space-x-4">
+                        <img 
+                            src="${item.image}" 
+                            alt="${item.name}" 
+                            class="w-20 h-20 rounded-lg object-cover"
+                            onerror="this.src='${defaultImage}'"
+                        >
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                            <p class="text-sm text-gray-500">₹${item.price.toFixed(2)}</Gbp>
+                            <div class="flex items-center mt-2">
+                                <button class="h-6 w-6 bg-gray-200 text-gray-700 rounded-full font-bold" onclick="updateQuantity(${item.id}, -1)">-</button>
+                                <span class="mx-3 w-6 text-center font-medium">${item.quantity}</span>
+                                <button class="h-6 w-6 bg-gray-200 text-gray-700 rounded-full font-bold" onclick="updateQuantity(${item.id}, 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-lg text-gray-900">₹${(item.price * item.quantity).toFixed(2)}</p>
+                            <button class="text-sm text-red-500 hover:text-red-700 mt-1" onclick="removeFromCart(${item.id})">Remove</button>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    `;
+                });
+
+                cartTotalEl.innerText = `₹${total.toFixed(2)}`;
+                cartCountEl.innerText = count;
+                cartCountEl.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Place the order by sending it to the backend
+         */
+        async function placeOrder() {
+            if (cart.length === 0) {
+                showMessage('Empty Cart', 'Your cart is empty. Add some products before checking out!', 'error');
+                return;
+            }
+
+            const orderData = {
+                customerId: CUSTOMER_ID_FOR_DEMO,
+                items: cart.map(item => ({ productId: item.id, quantity: item.quantity }))
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Order Placed!', `Your order #${result.orderId} has been successfully placed.`, 'success');
+                    cart = [];
+                    updateCartUI();
+                    toggleCart();
+                } else {
+                    throw new Error(result.message || 'Failed to place order.');
+                }
+            } catch (error) {
+                console.error('Order placement error:', error);
+                showMessage('Order Failed', `There was an error placing your order: ${error.message}`, 'error');
+            }
+        }
+
+
+        // --- Custom Message Modal Functions ---
+        
+        function showMessage(title, text, type = 'success') {
+            messageTitle.innerText = title;
+            messageText.innerText = text;
+            
+            if (type === 'success') {
+                messageIcon.innerHTML = `<svg class="h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`;
+                messageIcon.parentElement.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary-light";
+            } else if (type === 'error') {
+                messageIcon.innerHTML = `<svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>`;
+                messageIcon.parentElement.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100";
+            }
+
+            messageModal.classList.remove('hidden');
+            messageModal.classList.add('flex');
+        }
+
+        function hideMessage() {
+            messageModal.classList.add('hidden');
+            messageModal.classList.remove('flex');
+        }
+
+        // --- Event Listeners ---
+        cartButton.addEventListener('click', toggleCart);
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            fetchProducts();
+            updateCartUI();
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900">Farmers Management</h1>
+    <p class="text-gray-700 mt-2">{{ farmers|length }} farmers registered</p>
+  </div>
+
+  <!-- Farmers Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Farmer ID</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Name</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Email</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Phone</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Products</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-amber-200">
+          {% for farmer in farmers %}
+          <tr class="hover:bg-amber-50 transition-colors">
+            <td class="px-6 py-4 text-gray-600 text-sm">{{ farmer.FarmerID }}</td>
+            <td class="px-6 py-4 text-gray-900 font-semibold">{{ farmer.Name or 'N/A' }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ farmer.Email or 'N/A' }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ farmer.Phone or 'N/A' }}</td>
+            <td class="px-6 py-4">
+              <span class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
+                {{ farmer.product_count or 0 }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-block bg-green-100 text-green-700 px-4 py-1 rounded-lg text-sm font-semibold">
+                Active
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-gray-600">No farmers found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

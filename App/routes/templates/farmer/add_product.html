@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900">Add New Product</h1>
+    <p class="text-gray-700 mt-2">List a new product from your farm</p>
+  </div>
+
+  <!-- Form Card -->
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+    <form method="post" action="{{ url_for('farmer.add_product') }}" class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- Product Name -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-900 mb-2">Product Name *</label>
+        <input type="text" name="product_name" placeholder="e.g., Organic Tomatoes" 
+               class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
+               required>
+        <p class="text-xs text-gray-500 mt-1">Enter the name of your product</p>
+      </div>
+
+      <!-- Category & Season Row -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Category -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">Category *</label>
+          <select name="category_id" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+            <option value="">Select a category</option>
+            {% for cat in categories %}
+            <option value="{{ cat.CategoryID }}">{{ cat.CategoryName }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Choose the product category</p>
+        </div>
+
+        <!-- Season -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">Season *</label>
+          <select name="season_id" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+            <option value="">Select a season</option>
+            {% for s in seasons %}
+            <option value="{{ s.SeasonID }}">{{ s.SeasonName }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-gray-500 mt-1">When is this product available</p>
+        </div>
+      </div>
+
+      <!-- Price & Freshness Row -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Price -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">Price (₹) *</label>
+          <input type="number" name="price" placeholder="e.g., 50" step="0.01" min="0"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">Price per unit/kg</p>
+        </div>
+
+        <!-- Freshness -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">Freshness</label>
+          <select name="freshness" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+            <option value="Fresh">🌱 Fresh</option>
+            <option value="Good">✓ Good</option>
+            <option value="Premium">⭐ Premium</option>
+            <option value="Organic">🍃 Organic</option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Quality/freshness level</p>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+        <div class="flex gap-3">
+          <i class="fas fa-info-circle text-blue-600 text-xl flex-shrink-0 mt-0.5"></i>
+          <div>
+            <h3 class="font-semibold text-blue-900 mb-1">Product Information</h3>
+            <p class="text-sm text-blue-800">After adding your product, you can manage prices from the products page. Customers will see your product in the marketplace based on the selected category and season.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4 pt-6 border-t border-gray-200">
+        <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+          <i class="fas fa-plus"></i> Add Product
+        </button>
+        <a href="{{ url_for('farmer.products') }}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-3 rounded-lg transition-all text-center flex items-center justify-center gap-2">
+          <i class="fas fa-arrow-left"></i> Back
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

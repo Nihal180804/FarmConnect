@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Loyalty Rewards</h1>
+    <p class="text-gray-700">Earn points with every purchase and redeem them for discounts!</p>
+  </div>
+
+  <!-- Points Overview Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Current Points -->
+    <div class="bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl shadow-xl p-8 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <i class="fas fa-star text-5xl opacity-80"></i>
+        <div class="text-right">
+          <div class="text-sm font-semibold opacity-90">Available Points</div>
+          <div class="text-5xl font-bold">{{ loyalty_points }}</div>
+        </div>
+      </div>
+      <div class="border-t border-yellow-300 pt-4 mt-4">
+        <p class="text-sm opacity-90">1 Point = ₹1 Discount</p>
+      </div>
+    </div>
+
+    <!-- Total Spent -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-emerald-200">
+      <div class="flex items-center justify-between mb-4">
+        <i class="fas fa-wallet text-4xl text-emerald-600"></i>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-gray-700">Total Spent</div>
+          <div class="text-3xl font-bold text-gray-900">₹{{ "%.2f"|format(total_spent) }}</div>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 pt-4 mt-4">
+        <p class="text-sm text-gray-600">From completed orders</p>
+      </div>
+    </div>
+
+    <!-- Points Earned -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-amber-200">
+      <div class="flex items-center justify-between mb-4">
+        <i class="fas fa-gift text-4xl text-amber-600"></i>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-gray-700">Points Earned</div>
+          <div class="text-3xl font-bold text-gray-900">{{ loyalty_points }}</div>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 pt-4 mt-4">
+        <p class="text-sm text-gray-600">₹10 spent = 1 point</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-lg p-8 mb-8 border border-emerald-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+      <i class="fas fa-info-circle text-emerald-600"></i>
+      How Loyalty Points Work
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">1</div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-2">Earn Points</h3>
+          <p class="text-sm text-gray-700">Get 1 point for every ₹10 you spend on completed orders</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">2</div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-2">Redeem Discount</h3>
+          <p class="text-sm text-gray-700">Use your points at checkout - 1 point = ₹1 discount</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">3</div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-2">Save Money</h3>
+          <p class="text-sm text-gray-700">Apply points to reduce your total bill on future purchases</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order History -->
+  <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+      <i class="fas fa-history text-emerald-600"></i>
+      Completed Orders (Points Earned)
+    </h2>
+    
+    {% if orders %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-emerald-100 border-b-2 border-emerald-300">
+            <th class="text-left py-3 px-4 font-semibold text-gray-900">Order ID</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
+            <th class="text-right py-3 px-4 font-semibold text-gray-900">Amount</th>
+            <th class="text-right py-3 px-4 font-semibold text-gray-900">Points Earned</th>
+            <th class="text-center py-3 px-4 font-semibold text-gray-900">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr class="border-b border-gray-200 hover:bg-amber-50 transition-colors">
+            <td class="py-3 px-4 font-semibold text-gray-900">#{{ order.OrderID }}</td>
+            <td class="py-3 px-4 text-gray-700">{{ order.OrderDate.strftime('%Y-%m-%d') if order.OrderDate else 'N/A' }}</td>
+            <td class="py-3 px-4 text-right font-semibold text-gray-900">₹{{ "%.2f"|format(order.TotalAmount) }}</td>
+            <td class="py-3 px-4 text-right">
+              <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                +{{ (order.TotalAmount / 10)|int }}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-center">
+              <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+                {{ order.Status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+      <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+      <p class="text-xl text-gray-600 mb-2">No Completed Orders Yet</p>
+      <p class="text-gray-500 mb-6">Start shopping to earn loyalty points!</p>
+      <a href="{{ url_for('customer.shop') }}" class="inline-block bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-8 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all">
+        <i class="fas fa-store mr-2"></i>Shop Now
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Call to Action -->
+  <div class="mt-8 text-center">
+    <a href="{{ url_for('customer.shop') }}" class="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all transform hover:scale-105">
+      <i class="fas fa-shopping-bag text-2xl"></i>
+      <span>Continue Shopping to Earn More Points</span>
+    </a>
+  </div>
+</div>
+
+{% endblock %}

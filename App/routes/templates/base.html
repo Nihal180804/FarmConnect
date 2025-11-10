@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_config.title }}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#10b981',
+            'primary-light': '#34d399',
+            accent: '#f59e0b',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>const APP = {USER: {{ session.get('user')|tojson }} };</script>
+  <style>
+    body { font-family: 'Poppins', 'Inter', sans-serif; }
+    .sidebar-collapsed { width: 70px; }
+    .sidebar-expanded { width: 180px; }
+    .nav-link { 
+      @apply text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 px-3 py-2.5 rounded-lg transition-all text-sm;
+      display: flex !important;
+      align-items: center;
+    }
+    .nav-link.active { @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white; }
+    .nav-link i { 
+      flex-shrink: 0;
+      min-width: 20px;
+      text-align: center;
+    }
+    .nav-link .nav-text { 
+      transition: opacity 0.2s, width 0.2s;
+      white-space: nowrap;
+    }
+    .sidebar-collapsed .nav-link .nav-text { 
+      opacity: 0; 
+      width: 0; 
+      overflow: hidden; 
+    }
+    .sidebar-collapsed .nav-link { 
+      justify-content: center !important;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    .sidebar-collapsed .sidebar-section-title { 
+      opacity: 0; 
+      height: 0; 
+      padding: 0; 
+      overflow: hidden; 
+    }
+    .sidebar-collapsed .loyalty-badge { 
+      display: none !important;
+    }
+    .loyalty-badge {
+      transition: opacity 0.2s;
+    }
+    .flash-message { 
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
+    }
+    .flash-message.fade-out { 
+      opacity: 0; 
+      transform: translateX(100px); 
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  {% if not request.path == '/login' %}
+  
+  <!-- Modern Header -->
+  <header class="fixed top-0 left-0 right-0 z-40 bg-amber-100 bg-opacity-40 backdrop-blur border-b border-amber-200 shadow-sm">
+    <div class="flex items-center justify-between h-16 px-6">
+      <!-- Left: Logo & Title -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-leaf text-emerald-500 text-3xl"></i>
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">FarmConnect</h1>
+          <p class="text-xs text-gray-500">Fresh from Farm to Table</p>
+        </div>
+      </div>
+
+      <!-- Right: User & Actions -->
+      <div class="flex items-center gap-6">
+        <!-- User Profile -->
+        {% if session.get('user') %}
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div class="text-sm font-semibold text-gray-900">{{ session.user.Name if session.user.get('Name') else session.user.Email }}</div>
+            <div class="text-xs text-gray-500 capitalize">{{ session.user.UserType }}</div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold">
+            {{ session.user.Name[0].upper() if session.user.get('Name') else session.user.Email[0].upper() }}
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="ml-3 px-4 py-2 text-sm font-semibold text-emerald-600 border-2 border-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all">
+            Logout
+          </a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-light transition-all">
+          Login
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout with Sidebar -->
+  <div class="flex pt-16">
+    <!-- Left Sidebar - Sticky & Collapsible -->
+    <aside id="sidebar" class="sidebar-collapsed fixed left-0 top-16 h-screen bg-amber-50 border-r border-amber-200 shadow-lg transition-all duration-300 overflow-y-auto overflow-x-hidden">
+      <!-- Toggle Button -->
+      <div class="p-3 border-b border-amber-200">
+        <button id="sidebarToggle" class="w-full p-2 hover:bg-amber-100 rounded-lg transition-colors flex items-center justify-center">
+          <i class="fas fa-bars text-gray-600"></i>
+        </button>
+      </div>
+      
+      <nav class="p-3 space-y-1.5">
+        {% if session.get('user') %}
+          {% if session.user.UserType == 'Farmer' %}
+          <!-- Farmer Navigation -->
+          <a href="{{ url_for('farmer.dashboard') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.dashboard') %}active{% endif %}">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('farmer.products') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.products') %}active{% endif %}">
+            <i class="fas fa-boxes w-5"></i>
+            <span>My Products</span>
+          </a>
+          <div class="text-xs font-semibold text-gray-500 px-3 py-2 mt-3 uppercase sidebar-section-title">Analytics</div>
+          <a href="#" class="nav-link flex items-center gap-3">
+            <i class="fas fa-chart-bar w-5"></i>
+            <span>Sales Report</span>
+          </a>
+
+          {% elif session.user.UserType == 'Customer' %}
+          <!-- Customer Navigation -->
+          <a href="{{ url_for('customer.shop') }}" class="nav-link {% if request.path == url_for('customer.shop') %}active{% endif %}">
+            <i class="fas fa-store w-5"></i>
+            <span class="nav-text">Shop</span>
+          </a>
+          <a href="{{ url_for('customer.cart') }}" class="nav-link {% if request.path == url_for('customer.cart') %}active{% endif %}">
+            <i class="fas fa-shopping-cart w-5"></i>
+            <span class="nav-text">Cart</span>
+          </a>
+          <a href="{{ url_for('customer.orders') }}" class="nav-link {% if request.path == url_for('customer.orders') %}active{% endif %}">
+            <i class="fas fa-history w-5"></i>
+            <span class="nav-text">Orders</span>
+          </a>
+          
+          <a href="{{ url_for('customer.loyalty') }}" class="nav-link {% if request.path == url_for('customer.loyalty') %}active{% endif %}">
+            <i class="fas fa-star w-5"></i>
+            <span class="nav-text">Loyalty Points</span>
+          </a>
+          
+          <a href="{{ url_for('customer.settings') }}" class="nav-link {% if request.path == url_for('customer.settings') %}active{% endif %}">
+            <i class="fas fa-cog w-5"></i>
+            <span class="nav-text">Settings</span>
+          </a>
+
+          {% elif session.user.UserType == 'Admin' %}
+          <!-- Admin Navigation -->
+          <a href="{{ url_for('admin.dashboard') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.dashboard') %}active{% endif %}">
+            <i class="fas fa-tachometer-alt w-5"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('admin.farmers') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.farmers') %}active{% endif %}">
+            <i class="fas fa-user-farmer w-5"></i>
+            <span>Farmers</span>
+          </a>
+          <a href="{{ url_for('admin.orders') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.orders') %}active{% endif %}">
+            <i class="fas fa-receipt w-5"></i>
+            <span>Orders</span>
+          </a>
+          <a href="{{ url_for('admin.price_audit') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.price_audit') %}active{% endif %}">
+            <i class="fas fa-tag w-5"></i>
+            <span>Price Audit</span>
+          </a>
+          {% endif %}
+        {% endif %}
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="flex-1 ml-[70px] overflow-y-auto bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 transition-all duration-300">
+      <div class="p-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <div class="mb-6 space-y-3">
+            {% for category, msg in messages %}
+            <div class="flash-message flex items-center gap-3 p-4 rounded-lg {{ 'bg-green-100 text-green-700 border border-green-300' if category == 'success' else 'bg-red-100 text-red-700 border border-red-300' if category == 'error' else 'bg-blue-100 text-blue-700 border border-blue-300' }}">
+              <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' if category == 'error' else 'fa-info-circle' }}"></i>
+              <span class="font-medium">{{ msg }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+      </div>
+
+      <!-- Footer -->
+      <footer class="border-t border-amber-200 bg-amber-100 bg-opacity-20 py-6 mt-12">
+        <div class="text-center text-gray-700 text-sm">
+          <p>&copy; {{ 2025 }} FarmConnect. All rights reserved.</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  {% else %}
+  <!-- Login page (no header/sidebar) -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-3">
+      {% for category, msg in messages %}
+      <div class="flash-message flex items-center gap-3 p-4 rounded-lg {{ 'bg-green-100 text-green-700 border border-green-300' if category == 'success' else 'bg-red-100 text-red-700 border border-red-300' if category == 'error' else 'bg-blue-100 text-blue-700 border border-blue-300' }}">
+        <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' if category == 'error' else 'fa-info-circle' }}"></i>
+        <span class="font-medium">{{ msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+  {% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+  // Auto-fade flash messages
+  (function(){
+    document.querySelectorAll('.flash-message').forEach(function(msg) {
+      setTimeout(function() {
+        msg.classList.add('fade-out');
+        setTimeout(function() {
+          msg.remove();
+        }, 500); // Remove after fade animation completes
+      }, 3000); // Start fading after 3 seconds
+    });
+  })();
+
+  // Sidebar Toggle
+  (function(){
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const sidebarState = localStorage.getItem('sidebar-state') || 'collapsed';
+    
+    // Apply saved state
+    if (sidebarState === 'expanded') {
+      sidebar?.classList.remove('sidebar-collapsed');
+      sidebar?.classList.add('sidebar-expanded');
+      if (mainContent) mainContent.style.marginLeft = '180px';
+    }
+    
+    toggleBtn?.addEventListener('click', () => {
+      const isCollapsed = sidebar?.classList.contains('sidebar-collapsed');
+      
+      if (isCollapsed) {
+        sidebar?.classList.remove('sidebar-collapsed');
+        sidebar?.classList.add('sidebar-expanded');
+        if (mainContent) mainContent.style.marginLeft = '180px';
+        localStorage.setItem('sidebar-state', 'expanded');
+      } else {
+        sidebar?.classList.remove('sidebar-expanded');
+        sidebar?.classList.add('sidebar-collapsed');
+        if (mainContent) mainContent.style.marginLeft = '70px';
+        localStorage.setItem('sidebar-state', 'collapsed');
+      }
+    });
+  })();
+
+  // Fetch and display loyalty points for customers
+  (function(){
+    const badge = document.querySelector('.loyalty-badge');
+    if (badge && badge.dataset.customerId) {
+      fetch('/customer/api/loyalty-points')
+        .then(r => r.json())
+        .then(data => {
+          if (data.points !== undefined) {
+            badge.textContent = data.points;
+          }
+        })
+        .catch(err => console.log('Could not fetch loyalty points'));
+    }
+  })();
+</script>
+
+</body>
+</html>

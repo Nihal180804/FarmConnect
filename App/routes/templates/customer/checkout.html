@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
+      <p class="text-gray-700">Complete your order from local farmers</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Order Summary (Left) -->
+      <div class="lg:col-span-2">
+        <!-- Order Items -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+          
+          {% if items %}
+          <div class="space-y-4">
+            {% for item in items %}
+            <div class="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-leaf text-emerald-600 text-2xl"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900">{{ item.Name }}</h3>
+                  <p class="text-sm text-gray-600">₹{{ "%.2f"|format(item.Price|float) }} × {{ item.quantity }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-gray-900">₹{{ "%.2f"|format(item.subtotal|float) }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-center text-gray-600 py-8">No items in your order</p>
+          {% endif %}
+        </div>
+
+        <!-- Delivery Details -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Delivery Details</h2>
+          <form class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-900 mb-2">Full Name</label>
+              <input type="text" class="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white bg-opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="John Doe" required>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-900 mb-2">Address</label>
+              <input type="text" class="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white bg-opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="123 Main St, City" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-900 mb-2">City</label>
+                <input type="text" class="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white bg-opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Your City" required>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-900 mb-2">Postal Code</label>
+                <input type="text" class="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white bg-opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="123456" required>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-900 mb-2">Phone Number</label>
+              <input type="tel" class="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white bg-opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="+91 9876543210" required>
+            </div>
+          </form>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Payment Method</h2>
+          <div class="space-y-3">
+            <label class="flex items-center p-4 border-2 border-emerald-500 rounded-lg cursor-pointer bg-emerald-50">
+              <input type="radio" name="payment" value="cod" checked class="w-4 h-4">
+              <span class="ml-3 text-gray-900 font-semibold">Cash on Delivery</span>
+            </label>
+            <label class="flex items-center p-4 border-2 border-amber-200 rounded-lg cursor-pointer hover:border-amber-300 bg-white bg-opacity-50">
+              <input type="radio" name="payment" value="upi" class="w-4 h-4">
+              <span class="ml-3 text-gray-900 font-semibold">UPI Payment</span>
+            </label>
+            <label class="flex items-center p-4 border-2 border-amber-200 rounded-lg cursor-pointer hover:border-amber-300 bg-white bg-opacity-50">
+              <input type="radio" name="payment" value="card" class="w-4 h-4">
+              <span class="ml-3 text-gray-900 font-semibold">Debit/Credit Card</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price Breakdown (Right Sidebar) -->
+      <div>
+        <div class="bg-white rounded-lg shadow-md p-6 sticky top-20 border border-gray-200">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">Price Breakdown</h2>
+          
+          <div class="space-y-3 border-b border-amber-200 pb-4 mb-4">
+            <div class="flex justify-between text-gray-900">
+              <span>Subtotal</span>
+              <span id="subtotal-display">₹{{ "%.2f"|format(total|float) }}</span>
+            </div>
+            <div class="flex justify-between text-gray-900">
+              <span>Delivery Fee</span>
+              <span class="text-emerald-600 font-semibold">Free</span>
+            </div>
+            <div class="flex justify-between text-gray-900">
+              <span>Tax (5%)</span>
+              <span id="tax-display">₹{{ "%.2f"|format(total * 0.05) }}</span>
+            </div>
+          </div>
+
+          <!-- Loyalty Points Section -->
+          <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-4 mb-4 border-2 border-amber-300">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-star text-amber-500 text-lg"></i>
+                <span class="font-bold text-gray-900">Loyalty Points</span>
+              </div>
+              <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-bold">{{ loyalty_points }}</span>
+            </div>
+            
+            {% if loyalty_points > 0 %}
+            <div class="space-y-2">
+              <p class="text-xs text-gray-700 mb-2">1 Point = ₹1 Discount</p>
+              <div class="flex items-center gap-2">
+                <input type="number" id="loyalty-points-input" min="0" max="{{ max_discount }}" value="0" 
+                       class="flex-1 px-3 py-2 border-2 border-amber-300 rounded-lg text-center font-bold focus:outline-none focus:ring-2 focus:ring-amber-500" 
+                       oninput="updatePriceWithLoyalty()">
+                <button onclick="applyMaxLoyalty()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                  Use Max
+                </button>
+              </div>
+              <div class="flex justify-between text-sm text-gray-700 mt-2">
+                <span>Loyalty Discount:</span>
+                <span id="loyalty-discount" class="font-bold text-emerald-600">-₹0.00</span>
+              </div>
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-600">Complete orders to earn loyalty points! (₹10 spent = 1 point)</p>
+            {% endif %}
+          </div>
+
+          <div class="flex justify-between text-lg font-bold text-gray-900 mb-6 pt-3 border-t-2 border-gray-300">
+            <span>Total Amount</span>
+            <span id="final-total" class="text-emerald-600">₹{{ "%.2f"|format(total * 1.05) }}</span>
+          </div>
+
+          <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 px-4 rounded-lg transition-all mb-3">
+            <i class="fas fa-check-circle mr-2"></i>Place Order
+          </button>
+
+          <a href="{{ url_for('customer.cart') }}" class="w-full block text-center bg-amber-200 hover:bg-amber-300 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Cart
+          </a>
+
+          <!-- Trust Badges -->
+          <div class="mt-6 pt-6 border-t border-amber-200">
+            <p class="text-xs text-gray-700 text-center mb-3">Why buy from us?</p>
+            <div class="space-y-2 text-xs text-gray-700">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-shield-alt text-emerald-600"></i>
+                <span>100% Secure Payment</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-truck text-emerald-600"></i>
+                <span>Free Delivery</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-leaf text-emerald-600"></i>
+                <span>Fresh from Farmers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUBTOTAL = {{ total|float }};
+const TAX_RATE = 0.05;
+const MAX_LOYALTY = {{ max_discount|float }};
+
+function updatePriceWithLoyalty() {
+  const loyaltyInput = document.getElementById('loyalty-points-input');
+  let pointsToUse = parseInt(loyaltyInput.value) || 0;
+  
+  // Ensure points don't exceed maximum
+  if (pointsToUse > MAX_LOYALTY) {
+    pointsToUse = MAX_LOYALTY;
+    loyaltyInput.value = MAX_LOYALTY;
+  }
+  if (pointsToUse < 0) {
+    pointsToUse = 0;
+    loyaltyInput.value = 0;
+  }
+  
+  // Calculate discount (1 point = ₹1)
+  const discount = pointsToUse;
+  
+  // Calculate new totals
+  const subtotalAfterDiscount = SUBTOTAL - discount;
+  const tax = subtotalAfterDiscount * TAX_RATE;
+  const finalTotal = subtotalAfterDiscount + tax;
+  
+  // Update display
+  document.getElementById('loyalty-discount').textContent = `-₹${discount.toFixed(2)}`;
+  document.getElementById('final-total').textContent = `₹${finalTotal.toFixed(2)}`;
+}
+
+function applyMaxLoyalty() {
+  document.getElementById('loyalty-points-input').value = MAX_LOYALTY;
+  updatePriceWithLoyalty();
+}
+
+function placeOrder() {
+  const loyaltyPoints = parseInt(document.getElementById('loyalty-points-input')?.value) || 0;
+  
+  if (confirm('Confirm your order? Your items will be delivered soon!')) {
+    const formData = new URLSearchParams();
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    formData.append('loyalty_points_used', loyaltyPoints);
+    
+    fetch("{{ url_for('customer.order_place') }}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: formData
+    }).then(r => r.json()).then(j => {
+      if (j.success) {
+        let message = 'Order placed successfully!';
+        if (j.discount_applied > 0) {
+          message += ` You saved ₹${j.discount_applied.toFixed(2)} using loyalty points!`;
+        }
+        alert(message);
+        location.href = "{{ url_for('customer.orders') }}";
+      } else {
+        alert('Error: ' + (j.message || 'Failed to place order'));
+      }
+    }).catch(err => {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    });
+  }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900">Orders Management</h1>
+    <p class="text-gray-700 mt-2">{{ orders|length }} orders</p>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-amber-100 rounded-xl shadow-lg border border-amber-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Order ID</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Customer</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Date</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Total</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-amber-200">
+          {% for order in orders %}
+          <tr class="hover:bg-amber-50 transition-colors">
+            <td class="px-6 py-4 text-gray-900 font-semibold">#{{ order.OrderID }}</td>
+            <td class="px-6 py-4 text-gray-900">{{ order.customer_name or 'Unknown' }}</td>
+            <td class="px-6 py-4 text-gray-700 text-sm">{{ order.OrderDate or 'N/A' }}</td>
+            <td class="px-6 py-4">
+              <span class="inline-block {{ 'bg-blue-100 text-blue-700' if order.Status == 'Processing' else 'bg-green-100 text-green-700' if order.Status == 'Delivered' else 'bg-yellow-100 text-yellow-700' if order.Status == 'Shipped' else 'bg-gray-100 text-gray-700' }} px-4 py-1 rounded-lg text-sm font-semibold">
+                {{ order.Status or 'Pending' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-gray-900 font-bold">₹{{ "%.2f"|format(order.computed_total|float) if order.computed_total else '0.00' }}</td>
+            <td class="px-6 py-4">
+              <button class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm" title="View Details"><i class="fas fa-eye"></i></button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-gray-600">No orders found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

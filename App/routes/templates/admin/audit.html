@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900">Price Audit Log</h1>
+    <p class="text-gray-700 mt-2">{{ audits|length }} price changes</p>
+  </div>
+
+  <!-- Audit Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Product</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Old Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">New Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Changed At</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Change %</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-amber-200">
+          {% for audit in audits %}
+          <tr class="hover:bg-amber-50 transition-colors">
+            <td class="px-6 py-4 text-gray-900 font-semibold">{{ audit.product_name or 'N/A' }}</td>
+            <td class="px-6 py-4 text-gray-900">₹{{ "%.2f"|format(audit.OldPrice|float) if audit.OldPrice else '0.00' }}</td>
+            <td class="px-6 py-4 text-gray-900">₹{{ "%.2f"|format(audit.NewPrice|float) if audit.NewPrice else '0.00' }}</td>
+            <td class="px-6 py-4 text-gray-700 text-sm">{{ audit.ChangedAt or 'N/A' }}</td>
+            <td class="px-6 py-4">
+              {% if audit.OldPrice and audit.NewPrice %}
+                {% set change = ((audit.NewPrice|float - audit.OldPrice|float) / audit.OldPrice|float * 100)|round(2) %}
+                <span class="inline-block {% if change > 0 %}bg-red-100 text-red-700{% elif change < 0 %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %} px-3 py-1 rounded-lg text-sm font-semibold">
+                  {{ "%+.2f"|format(change) }}%
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-gray-600">No price changes found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

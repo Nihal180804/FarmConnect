@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - FarmConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fecaca 100%); }
+    </style>
+</head>
+<body>
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-2xl w-full">
+        <!-- Logo & Title -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <i class="fas fa-leaf text-emerald-500 text-4xl"></i>
+                <h1 class="text-4xl font-bold text-gray-900">FarmConnect</h1>
+            </div>
+        </div>
+
+        <!-- Registration Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <p class="text-gray-600 mb-8">Choose your account type and get started</p>
+
+            <!-- Account Type Tabs -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button class="account-type-btn customer-tab px-6 py-3 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-600 font-semibold transition-all active flex items-center justify-center gap-2" data-type="customer">
+                    <i class="fas fa-user"></i> Customer
+                </button>
+                <button class="account-type-btn farmer-tab px-6 py-3 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 font-semibold transition-all hover:border-emerald-500 flex items-center justify-center gap-2" data-type="farmer">
+                    <i class="fas fa-tractor"></i> Farmer
+                </button>
+            </div>
+
+            <!-- Customer Registration Form -->
+            <form id="customerForm" method="post" action="{{ url_for('auth.register') }}" class="form-section space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="user_type" value="Customer" class="user-type-input">
+
+                <!-- Full Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Full Name</label>
+                    <input type="text" name="full_name" placeholder="John Doe" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Email</label>
+                    <input type="email" name="email" placeholder="john@example.com" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                </div>
+
+                <!-- Location -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Location</label>
+                    <input type="text" name="location" placeholder="City, State" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                </div>
+
+                <!-- Password Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Confirm Password</label>
+                        <input type="password" name="confirm_password" placeholder="••••••••" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-user-plus mr-2"></i> Create Customer Account
+                </button>
+            </form>
+
+            <!-- Farmer Registration Form (Hidden by default) -->
+            <form id="farmerForm" method="post" action="{{ url_for('auth.register') }}" class="form-section space-y-6 hidden">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="user_type" value="Farmer" class="user-type-input">
+
+                <!-- Farm Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Full Name / Farm Name</label>
+                    <input type="text" name="full_name" placeholder="Green Valley Farms" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                </div>
+
+                <!-- Email -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Email</label>
+                        <input type="email" name="email" placeholder="farmer@example.com" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Contact Number</label>
+                        <input type="tel" name="phone" placeholder="1234567890" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                </div>
+
+                <!-- Farm Location -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Farm Location</label>
+                    <input type="text" name="location" placeholder="City, State" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                </div>
+
+                <!-- Additional Info Section -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-700 text-center">Complete your profile after registration to start selling</p>
+                </div>
+
+                <!-- Password Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 mb-2">Confirm Password</label>
+                        <input type="password" name="confirm_password" placeholder="••••••••" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-user-plus mr-2"></i> Create Farmer Account
+                </button>
+            </form>
+
+            <!-- Login Link -->
+            <p class="text-center mt-6 text-gray-600">
+                Already have an account? <a href="{{ url_for('auth.login') }}" class="text-emerald-600 font-semibold hover:text-emerald-700">Sign in</a>
+            </p>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="{{ url_for('auth.index') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Account type switching
+    document.querySelectorAll('.account-type-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const accountType = this.dataset.type;
+            
+            // Update active state
+            document.querySelectorAll('.account-type-btn').forEach(b => {
+                b.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-600');
+                b.classList.add('border-gray-300', 'bg-gray-50', 'text-gray-700');
+            });
+            this.classList.remove('border-gray-300', 'bg-gray-50', 'text-gray-700');
+            this.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-600');
+
+            // Show/hide forms
+            if (accountType === 'customer') {
+                document.getElementById('customerForm').classList.remove('hidden');
+                document.getElementById('farmerForm').classList.add('hidden');
+            } else {
+                document.getElementById('customerForm').classList.add('hidden');
+                document.getElementById('farmerForm').classList.remove('hidden');
+            }
+        });
+    });
+
+    // Form validation
+    document.getElementById('customerForm').addEventListener('submit', function(e) {
+        const password = this.querySelector('input[name="password"]').value;
+        const confirmPassword = this.querySelector('input[name="confirm_password"]').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+        }
+    });
+
+    document.getElementById('farmerForm').addEventListener('submit', function(e) {
+        const password = this.querySelector('input[name="password"]').value;
+        const confirmPassword = this.querySelector('input[name="confirm_password"]').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+        }
+    });
+</script>
+
+</body>
+</html>

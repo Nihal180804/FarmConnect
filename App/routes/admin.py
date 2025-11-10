@@ -1,0 +1,65 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+from functools import wraps
+from database import fetchall, fetchone, execute
+from config import APP_CONFIG
+
+admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
+
+# helper
+def flask_render(tpl, **kwargs):
+    return render_template(tpl, app_config=APP_CONFIG, **kwargs)
+
+def login_required(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if not session.get('user'):
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return inner
+
+def admin_required(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if session.get('user')['UserType'] != 'Admin':
+            flash("Admins only", "danger")
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return inner
+
+@admin_bp.route("/dashboard")
+@login_required
+@admin_required
+def dashboard():
+    totals = {}
+    totals['farmers'] = fetchone("SELECT COUNT(*) AS cnt FROM farmer")['cnt']
+    totals['customers'] = fetchone("SELECT COUNT(*) AS cnt FROM customer")['cnt']
+    totals['products'] = fetchone("SELECT COUNT(*) AS cnt FROM product")['cnt']
+    totals['orders'] = fetchone("SELECT COUNT(*) AS cnt FROM orders")['cnt']
+    totals['revenue'] = fetchone("SELECT COALESCE(SUM(TotalAmount),0) as r FROM orders")['r']
+    return flask_render("admin/dashboard.html", totals=totals)
+
+@admin_bp.route("/farmers")
+@login_required
+@admin_required
+def farmers():
+    rows = fetchall("SELECT f.*, GetFarmerProductCount(f.FarmerID) as product_count FROM farmer f")
+    return flask_render("admin/farmers.html", farmers=rows)
+
+@admin_bp.route("/orders")
+@login_required
+@admin_required
+def orders():
+    rows = fetchall("""
+        SELECT o.*, c.Name as customer_name, (SELECT CalculateOrderTotal(o.OrderID)) as computed_total
+        FROM orders o
+        LEFT JOIN customer c ON o.CustomerID = c.CustomerID
+        ORDER BY o.OrderDate DESC
+    """)
+    return flask_render("admin/orders.html", orders=rows)
+
+@admin_bp.route("/price_audit")
+@login_required
+@admin_required
+def price_audit():
+    rows = fetchall("SELECT ppa.*, pr.Name as product_name FROM product_price_audit ppa JOIN product pr ON pr.ProductID = ppa.ProductID ORDER BY ChangedAt DESC")
+    return flask_render("admin/audit.html", audits=rows)
