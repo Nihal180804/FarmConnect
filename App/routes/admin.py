@@ -63,3 +63,50 @@ def orders():
 def price_audit():
     rows = fetchall("SELECT ppa.*, pr.Name as product_name FROM product_price_audit ppa JOIN product pr ON pr.ProductID = ppa.ProductID ORDER BY ChangedAt DESC")
     return flask_render("admin/audit.html", audits=rows)
+
+@admin_bp.route("/settings", methods=["GET", "POST"])
+@login_required
+@admin_required
+def settings():
+    """Settings page for admins to manage password."""
+    from werkzeug.security import check_password_hash, generate_password_hash
+    
+    user_id = session['user']['UserID']
+    
+    if request.method == "POST":
+        action = request.form.get('action')
+        
+        if action == 'change_password':
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # Validate
+            if not all([current_password, new_password, confirm_password]):
+                flash("All fields are required", "danger")
+                return redirect(url_for('admin.settings'))
+            
+            if new_password != confirm_password:
+                flash("New passwords do not match", "danger")
+                return redirect(url_for('admin.settings'))
+            
+            if len(new_password) < 6:
+                flash("Password must be at least 6 characters", "danger")
+                return redirect(url_for('admin.settings'))
+            
+            # Check current password
+            user = fetchone("SELECT Password FROM users WHERE UserID = %s", (user_id,))
+            if not user or not check_password_hash(user['Password'], current_password):
+                flash("Current password is incorrect", "danger")
+                return redirect(url_for('admin.settings'))
+            
+            # Update password
+            hashed = generate_password_hash(new_password)
+            execute("UPDATE users SET Password = %s WHERE UserID = %s", (hashed, user_id))
+            flash("Password changed successfully!", "success")
+            return redirect(url_for('admin.settings'))
+    
+    # GET request - show settings page
+    user = fetchone("SELECT Email FROM users WHERE UserID = %s", (user_id,))
+    
+    return flask_render("admin/settings.html", user=user)

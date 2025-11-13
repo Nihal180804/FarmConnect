@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+  <!-- Page Header with Download Button -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-4xl font-bold text-gray-900">Sales Report</h1>
+      <p class="text-gray-700 mt-2">Comprehensive overview of your sales performance</p>
+    </div>
+    <div>
+      <a href="{{ url_for('farmer.sales_report_pdf') }}" 
+         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-lg shadow-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Download PDF Report
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Products -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Total Products</h3>
+        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-boxes text-emerald-600 text-xl"></i>
+        </div>
+      </div>
+      <div class="text-4xl font-bold text-emerald-600">{{ overview.TotalProducts or 0 }}</div>
+      <p class="text-gray-600 text-sm mt-2">Products listed</p>
+    </div>
+
+    <!-- Total Orders -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Total Orders</h3>
+        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+        </div>
+      </div>
+      <div class="text-4xl font-bold text-blue-600">{{ overview.TotalOrders or 0 }}</div>
+      <p class="text-gray-600 text-sm mt-2">Orders received</p>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Total Revenue</h3>
+        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-rupee-sign text-green-600 text-xl"></i>
+        </div>
+      </div>
+      <div class="text-3xl font-bold text-green-600">₹{{ overview.TotalRevenue or '0.00' }}</div>
+      <p class="text-gray-600 text-sm mt-2">Revenue generated</p>
+    </div>
+
+    <!-- Average Rating -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Avg. Rating</h3>
+        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-star text-yellow-600 text-xl"></i>
+        </div>
+      </div>
+      <div class="text-4xl font-bold text-yellow-600">{{ overview.AverageProductRating or '0.0' }}</div>
+      <p class="text-gray-600 text-sm mt-2">Product rating</p>
+    </div>
+  </div>
+
+  <!-- Revenue Chart -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">Revenue by Product</h3>
+    <canvas id="revenueChart" height="100"></canvas>
+  </div>
+
+  <!-- Detailed Products Table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-amber-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+      <h3 class="text-xl font-bold text-gray-900">Detailed Sales Breakdown</h3>
+      <p class="text-sm text-gray-600 mt-1">Complete product-wise sales information</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Product Name</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Price (₹)</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Units Sold</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Total Revenue (₹)</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Performance</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-amber-200">
+          {% if products %}
+            {% for p in products %}
+            <tr class="hover:bg-amber-50 transition-colors">
+              <td class="px-6 py-4 text-gray-900 font-medium">
+                <div class="flex items-center">
+                  <i class="fas fa-leaf text-emerald-500 mr-2"></i>
+                  {{ p.ProductName }}
+                </div>
+              </td>
+              <td class="px-6 py-4 text-gray-900 text-center font-medium">₹{{ p.Price }}</td>
+              <td class="px-6 py-4 text-gray-900 text-center">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {{ p.TotalUnitsSold }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-gray-900 text-center font-bold text-lg">₹{{ p.ProductRevenue }}</td>
+              <td class="px-6 py-4 text-center">
+                {% set revenue = p.ProductRevenue|float %}
+                {% if revenue >= 10000 %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-arrow-up mr-1"></i> Excellent
+                  </span>
+                {% elif revenue >= 5000 %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    <i class="fas fa-check mr-1"></i> Good
+                  </span>
+                {% elif revenue > 0 %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    <i class="fas fa-minus mr-1"></i> Average
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                    <i class="fas fa-ban mr-1"></i> No Sales
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p class="text-lg">No sales data available</p>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+        {% if products %}
+        <tfoot class="bg-gradient-to-r from-emerald-100 to-teal-100">
+          <tr>
+            <td colspan="2" class="px-6 py-4 text-right font-bold text-gray-900">TOTAL:</td>
+            <td class="px-6 py-4 text-center font-bold text-gray-900">
+              {{ products|sum(attribute='TotalUnitsSold')|int }}
+            </td>
+            <td class="px-6 py-4 text-center font-bold text-emerald-600 text-xl">
+              ₹{{ overview.TotalRevenue or '0.00' }}
+            </td>
+            <td class="px-6 py-4"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick Stats Cards -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Best Performing Product -->
+    <div class="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg p-6 text-white">
+      <h3 class="text-lg font-semibold mb-3 flex items-center">
+        <i class="fas fa-trophy mr-2"></i> Best Performing Product
+      </h3>
+      {% if products %}
+      <div class="text-2xl font-bold">{{ products[0].ProductName }}</div>
+      <div class="text-emerald-100 mt-2">Revenue: ₹{{ products[0].ProductRevenue }}</div>
+      {% else %}
+      <div class="text-xl">No data available</div>
+      {% endif %}
+    </div>
+
+    <!-- Total Units Sold -->
+    <div class="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl shadow-lg p-6 text-white">
+      <h3 class="text-lg font-semibold mb-3 flex items-center">
+        <i class="fas fa-box-open mr-2"></i> Total Units Sold
+      </h3>
+      {% if products %}
+      <div class="text-4xl font-bold">{{ products|sum(attribute='TotalUnitsSold')|int }}</div>
+      <div class="text-blue-100 mt-2">Across all products</div>
+      {% else %}
+      <div class="text-xl">No data available</div>
+      {% endif %}
+    </div>
+
+    <!-- Average Price -->
+    <div class="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
+      <h3 class="text-lg font-semibold mb-3 flex items-center">
+        <i class="fas fa-tag mr-2"></i> Average Product Price
+      </h3>
+      {% if products %}
+      {% set avg_price = (products|sum(attribute='Price')|float) / (products|length) %}
+      <div class="text-4xl font-bold">₹{{ "%.2f"|format(avg_price) }}</div>
+      <div class="text-purple-100 mt-2">Based on {{ products|length }} products</div>
+      {% else %}
+      <div class="text-xl">No data available</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  {% if products %}
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const labels = {{ products|map(attribute='ProductName')|list|tojson }};
+  const data = {{ products|map(attribute='ProductRevenue')|list|tojson }};
+  const colors = [
+    '#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444',
+    '#3b82f6', '#ec4899', '#14b8a6', '#f97316', '#84cc16'
+  ];
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: { 
+      labels, 
+      datasets:[{ 
+        label:'Revenue (₹)', 
+        data,
+        backgroundColor: colors.slice(0, data.length),
+        borderColor: colors.slice(0, data.length).map(c => c),
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
+    },
+    options: { 
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: function(context) {
+              return '₹' + context.parsed.y.toLocaleString();
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { 
+            color: '#374151',
+            font: { size: 12 },
+            callback: function(value) {
+              return '₹' + value.toLocaleString();
+            }
+          },
+          grid: { 
+            color: '#fed7aa',
+            drawBorder: false
+          }
+        },
+        x: {
+          ticks: { 
+            color: '#374151',
+            font: { size: 11, weight: '500' },
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: { 
+            display: false
+          }
+        }
+      }
+    }
+  });
+  {% endif %}
+});
+</script>
+
+{% endblock %}

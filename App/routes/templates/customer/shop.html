@@ -54,7 +54,7 @@
         
         <!-- Product Image Container -->
         <div class="relative w-full h-48 bg-gradient-to-br from-green-100 to-emerald-50 overflow-hidden">
-          <img src="{{ url_for('static', filename='images/products/' + (p.ProductID|string) + '.jpg') }}" alt="{{ p.ProductName }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.src='{{ url_for('static', filename='images/placeholder.svg') }}'">
+          <img src="{{ url_for('static', filename='images/products/' + (p.ImagePath if p.ImagePath else 'placeholder.jpg')) }}" alt="{{ p.ProductName }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/10b981/ffffff?text={{ p.ProductName }}'">
           
           <!-- Price Badge -->
           <div class="absolute top-3 right-3 bg-gradient-to-r from-primary to-emerald-600 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">

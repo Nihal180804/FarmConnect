@@ -305,11 +305,13 @@ def shop():
     # basic shop with filters
     category = request.args.get('category')
     season = request.args.get('season')
-    q = "SELECT v.* FROM v_productdetails v"
+    q = """SELECT v.*, p.ImagePath 
+           FROM v_productdetails v 
+           JOIN Product p ON v.ProductID = p.ProductID"""
     params = []
     where = []
     if category:
-        where.append("CategoryName=%s"); params.append(category)
+        where.append("v.CategoryName=%s"); params.append(category)
     if where:
         q += " WHERE " + " AND ".join(where)
     products = fetchall(q, tuple(params))

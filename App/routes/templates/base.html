@@ -70,6 +70,9 @@
     .sidebar-collapsed .loyalty-badge { 
       display: none !important;
     }
+    .sidebar-collapsed .nav-text {
+      display: none !important;
+    }
     .loyalty-badge {
       transition: opacity 0.2s;
     }
@@ -140,16 +143,19 @@
           <!-- Farmer Navigation -->
           <a href="{{ url_for('farmer.dashboard') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.dashboard') %}active{% endif %}">
             <i class="fas fa-chart-line w-5"></i>
-            <span>Dashboard</span>
+            <span class="nav-text">Dashboard</span>
           </a>
           <a href="{{ url_for('farmer.products') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.products') %}active{% endif %}">
             <i class="fas fa-boxes w-5"></i>
-            <span>My Products</span>
+            <span class="nav-text">My Products</span>
           </a>
-          <div class="text-xs font-semibold text-gray-500 px-3 py-2 mt-3 uppercase sidebar-section-title">Analytics</div>
-          <a href="#" class="nav-link flex items-center gap-3">
+          <a href="{{ url_for('farmer.sales_report') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.sales_report') %}active{% endif %}">
             <i class="fas fa-chart-bar w-5"></i>
-            <span>Sales Report</span>
+            <span class="nav-text">Sales Report</span>
+          </a>
+          <a href="{{ url_for('farmer.settings') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('farmer.settings') %}active{% endif %}">
+            <i class="fas fa-cog w-5"></i>
+            <span class="nav-text">Settings</span>
           </a>
 
           {% elif session.user.UserType == 'Customer' %}
@@ -181,19 +187,23 @@
           <!-- Admin Navigation -->
           <a href="{{ url_for('admin.dashboard') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.dashboard') %}active{% endif %}">
             <i class="fas fa-tachometer-alt w-5"></i>
-            <span>Dashboard</span>
+            <span class="nav-text">Dashboard</span>
           </a>
           <a href="{{ url_for('admin.farmers') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.farmers') %}active{% endif %}">
             <i class="fas fa-user-farmer w-5"></i>
-            <span>Farmers</span>
+            <span class="nav-text">Farmers</span>
           </a>
           <a href="{{ url_for('admin.orders') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.orders') %}active{% endif %}">
             <i class="fas fa-receipt w-5"></i>
-            <span>Orders</span>
+            <span class="nav-text">Orders</span>
           </a>
           <a href="{{ url_for('admin.price_audit') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.price_audit') %}active{% endif %}">
             <i class="fas fa-tag w-5"></i>
-            <span>Price Audit</span>
+            <span class="nav-text">Price Audit</span>
+          </a>
+          <a href="{{ url_for('admin.settings') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.settings') %}active{% endif %}">
+            <i class="fas fa-cog w-5"></i>
+            <span class="nav-text">Settings</span>
           </a>
           {% endif %}
         {% endif %}

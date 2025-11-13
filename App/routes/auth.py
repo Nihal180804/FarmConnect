@@ -134,7 +134,12 @@ def register():
                 """
                 execute(user_query, (email, hashed_password, 'Farmer', farmer_id))
                 
-                flash("Farmer account created successfully! Please log in.", "success")
+                # Auto-login the user
+                user = get_user_by_email(email)
+                if user:
+                    login_user(user)
+                    flash("Farmer account created successfully! Welcome to FarmConnect!", "success")
+                    return redirect(url_for('farmer.dashboard'))
             else:
                 # Create Customer
                 customer_query = """
@@ -154,7 +159,12 @@ def register():
                 """
                 execute(user_query, (email, hashed_password, 'Customer', customer_id))
                 
-                flash("Customer account created successfully! Please log in.", "success")
+                # Auto-login the user
+                user = get_user_by_email(email)
+                if user:
+                    login_user(user)
+                    flash("Customer account created successfully! Welcome to FarmConnect!", "success")
+                    return redirect(url_for('customer.shop'))
             
             return redirect(url_for('auth.login'))
         
