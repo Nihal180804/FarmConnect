@@ -69,6 +69,16 @@
               <span class="font-semibold">₹{{ "%.2f"|format(item.UnitPrice * item.Quantity) }}</span>
             </div>
           </div>
+          
+          <!-- Review Section for Delivered Orders -->
+          {% if order.Status == 'Delivered' or order.Status == 'Completed' %}
+          <div class="border-t border-gray-200 pt-4 mt-4">
+            <button onclick="openReviewModal({{ item.ProductID }}, '{{ item.ProductName }}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-star"></i>
+              Leave a Review
+            </button>
+          </div>
+          {% endif %}
         </div>
         {% endfor %}
         
@@ -108,5 +118,150 @@
   </div>
 
 </div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-gray-900">Leave a Review</h3>
+      <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="space-y-6">
+      <div>
+        <h4 id="reviewProductName" class="text-lg font-semibold text-gray-800 mb-4"></h4>
+      </div>
+      
+      <!-- Star Rating -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-3">Rating</label>
+        <div class="flex gap-2">
+          <button type="button" class="star-btn text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="1">
+            <i class="fas fa-star"></i>
+          </button>
+          <button type="button" class="star-btn text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="2">
+            <i class="fas fa-star"></i>
+          </button>
+          <button type="button" class="star-btn text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="3">
+            <i class="fas fa-star"></i>
+          </button>
+          <button type="button" class="star-btn text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="4">
+            <i class="fas fa-star"></i>
+          </button>
+          <button type="button" class="star-btn text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="5">
+            <i class="fas fa-star"></i>
+          </button>
+        </div>
+        <input type="hidden" id="selectedRating" value="0">
+      </div>
+      
+      <!-- Comment -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Your Review</label>
+        <textarea id="reviewComment" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Share your experience with this product..."></textarea>
+      </div>
+      
+      <!-- Submit Button -->
+      <div class="flex gap-3">
+        <button onclick="closeReviewModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition-colors">
+          Cancel
+        </button>
+        <button onclick="submitReview()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 rounded-lg transition-all">
+          Submit Review
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentProductId = null;
+
+function openReviewModal(productId, productName) {
+  currentProductId = productId;
+  document.getElementById('reviewProductName').textContent = productName;
+  document.getElementById('reviewModal').classList.remove('hidden');
+  document.getElementById('selectedRating').value = '0';
+  document.getElementById('reviewComment').value = '';
+  
+  // Reset stars
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.remove('text-yellow-400');
+    btn.classList.add('text-gray-300');
+  });
+}
+
+function closeReviewModal() {
+  document.getElementById('reviewModal').classList.add('hidden');
+  currentProductId = null;
+}
+
+// Star rating functionality
+document.querySelectorAll('.star-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const rating = parseInt(this.getAttribute('data-rating'));
+    document.getElementById('selectedRating').value = rating;
+    
+    // Update star colors
+    document.querySelectorAll('.star-btn').forEach((star, index) => {
+      if (index < rating) {
+        star.classList.remove('text-gray-300');
+        star.classList.add('text-yellow-400');
+      } else {
+        star.classList.remove('text-yellow-400');
+        star.classList.add('text-gray-300');
+      }
+    });
+  });
+});
+
+async function submitReview() {
+  const rating = document.getElementById('selectedRating').value;
+  const comment = document.getElementById('reviewComment').value.trim();
+  
+  if (rating == '0') {
+    alert('Please select a rating');
+    return;
+  }
+  
+  if (!comment) {
+    alert('Please write a review');
+    return;
+  }
+  
+  try {
+    const formData = new FormData();
+    formData.append('product_id', currentProductId);
+    formData.append('rating', rating);
+    formData.append('comment', comment);
+    
+    const response = await fetch('{{ url_for("customer.add_review") }}', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Review submitted successfully! Thank you for your feedback.');
+      closeReviewModal();
+    } else {
+      alert('Failed to submit review: ' + (result.error || 'Unknown error'));
+    }
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    alert('An error occurred while submitting your review');
+  }
+}
+
+// Close modal when clicking outside
+document.getElementById('reviewModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeReviewModal();
+  }
+});
+</script>
 
 {% endblock %}

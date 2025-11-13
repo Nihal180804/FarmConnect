@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Admin Settings</h1>
+    <p class="text-gray-700">Manage your security settings</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Settings Navigation -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <nav class="space-y-2">
+          <button onclick="showSection('account')" class="settings-nav-btn w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors active" data-section="account">
+            <i class="fas fa-user-shield mr-3"></i>Account
+          </button>
+          <button onclick="showSection('password')" class="settings-nav-btn w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors" data-section="password">
+            <i class="fas fa-lock mr-3"></i>Change Password
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="lg:col-span-2">
+      
+      <!-- Account Section -->
+      <div id="account-section" class="settings-section bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+          <i class="fas fa-user-shield text-emerald-600"></i>
+          Account Information
+        </h2>
+        
+        <div class="space-y-6">
+          <!-- Email (Read-only) -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              <i class="fas fa-envelope text-emerald-600 mr-2"></i>Email Address
+            </label>
+            <input type="email" value="{{ user.Email }}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-700" readonly>
+            <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+          </div>
+
+          <!-- User Type (Read-only) -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              <i class="fas fa-crown text-emerald-600 mr-2"></i>User Type
+            </label>
+            <input type="text" value="Administrator" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-700" readonly>
+            <p class="text-xs text-gray-500 mt-1">You have full administrative access to the system</p>
+          </div>
+
+          <!-- Info Card -->
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-l-4 border-emerald-500 p-6 rounded-lg">
+            <div class="flex items-start gap-3">
+              <i class="fas fa-info-circle text-emerald-600 text-xl mt-1"></i>
+              <div>
+                <h3 class="font-bold text-gray-900 mb-2">Administrator Account</h3>
+                <p class="text-sm text-gray-700">As an administrator, you have access to all system features including:</p>
+                <ul class="list-disc list-inside text-sm text-gray-700 mt-2 space-y-1 ml-4">
+                  <li>View and manage all farmers</li>
+                  <li>Monitor all orders across the platform</li>
+                  <li>Access price change audit logs</li>
+                  <li>Full system oversight and control</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Section -->
+      <div id="password-section" class="settings-section bg-white rounded-xl shadow-lg p-8 border border-gray-200 hidden">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+          <i class="fas fa-shield-alt text-emerald-600"></i>
+          Change Password
+        </h2>
+        
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i>
+            <div class="text-sm text-gray-700">
+              <p class="font-semibold mb-1">Security Best Practices:</p>
+              <ul class="list-disc list-inside space-y-1">
+                <li>Use a strong, unique password for your admin account</li>
+                <li>Password must be at least 6 characters long</li>
+                <li>Never share your admin credentials with anyone</li>
+                <li>Change your password regularly</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.settings') }}" class="space-y-6">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="change_password">
+          
+          <!-- Current Password -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              <i class="fas fa-key text-emerald-600 mr-2"></i>Current Password
+            </label>
+            <input type="password" name="current_password" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required>
+          </div>
+
+          <!-- New Password -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              <i class="fas fa-lock text-emerald-600 mr-2"></i>New Password
+            </label>
+            <input type="password" name="new_password" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required minlength="6">
+          </div>
+
+          <!-- Confirm New Password -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              <i class="fas fa-lock text-emerald-600 mr-2"></i>Confirm New Password
+            </label>
+            <input type="password" name="confirm_password" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required minlength="6">
+          </div>
+
+          <!-- Change Password Button -->
+          <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+            <i class="fas fa-shield-alt"></i>
+            <span>Change Password</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showSection(sectionName) {
+  // Hide all sections
+  document.querySelectorAll('.settings-section').forEach(section => {
+    section.classList.add('hidden');
+  });
+  
+  // Remove active class from all buttons
+  document.querySelectorAll('.settings-nav-btn').forEach(btn => {
+    btn.classList.remove('active', 'bg-emerald-100', 'text-emerald-700');
+    btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+  });
+  
+  // Show selected section
+  document.getElementById(sectionName + '-section').classList.remove('hidden');
+  
+  // Add active class to clicked button
+  const activeBtn = document.querySelector(`[data-section="${sectionName}"]`);
+  activeBtn.classList.add('active', 'bg-emerald-100', 'text-emerald-700');
+  activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+}
+
+// Initialize
+showSection('account');
+</script>
+
+<style>
+.settings-nav-btn {
+  @apply text-gray-600 hover:bg-gray-100;
+}
+.settings-nav-btn.active {
+  @apply bg-emerald-100 text-emerald-700;
+}
+</style>
+
+{% endblock %}
