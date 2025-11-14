@@ -33,7 +33,28 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script>const APP = {USER: {{ session.get('user')|tojson }} };</script>
   <style>
-    body { font-family: 'Poppins', 'Inter', sans-serif; }
+    body { 
+      font-family: 'Poppins', 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    /* Page Transition Animation */
+    .page-content {
+      animation: fadeInUp 0.4s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Sidebar Animations */
     .sidebar-collapsed { width: 70px; }
     .sidebar-expanded { width: 180px; }
     .nav-link { 
@@ -197,6 +218,10 @@
             <i class="fas fa-receipt w-5"></i>
             <span class="nav-text">Orders</span>
           </a>
+          <a href="{{ url_for('admin.inventory') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.inventory') %}active{% endif %}">
+            <i class="fas fa-warehouse w-5"></i>
+            <span class="nav-text">Inventory</span>
+          </a>
           <a href="{{ url_for('admin.price_audit') }}" class="nav-link flex items-center gap-3 {% if request.path == url_for('admin.price_audit') %}active{% endif %}">
             <i class="fas fa-tag w-5"></i>
             <span class="nav-text">Price Audit</span>
@@ -228,7 +253,9 @@
         {% endwith %}
 
         <!-- Page Content -->
-        {% block content %}{% endblock %}
+        <div class="page-content">
+          {% block content %}{% endblock %}
+        </div>
       </div>
 
       <!-- Footer -->

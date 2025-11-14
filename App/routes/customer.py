@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for, flash
-from database import fetchall, fetchone, place_order_proc, call_proc, add_product_review, get_customer_loyalty_points
+from database import fetchall, fetchone, place_order_proc, call_proc, add_product_review, get_customer_loyalty_points, get_seasonal_products
 from functools import wraps
 from config import APP_CONFIG
 
@@ -305,16 +305,30 @@ def shop():
     # basic shop with filters
     category = request.args.get('category')
     season = request.args.get('season')
-    q = """SELECT v.*, p.ImagePath 
-           FROM v_productdetails v 
-           JOIN Product p ON v.ProductID = p.ProductID"""
-    params = []
-    where = []
-    if category:
-        where.append("v.CategoryName=%s"); params.append(category)
-    if where:
-        q += " WHERE " + " AND ".join(where)
-    products = fetchall(q, tuple(params))
+    
+    # Use GetSeasonalProducts stored procedure if season filter is applied
+    if season and season.lower() != 'all':
+        products = get_seasonal_products(season)
+        # Filter by category if also specified
+        if category and category.lower() != 'all':
+            products = [p for p in products if p.get('CategoryName', '').lower() == category.lower()]
+    else:
+        # Regular query with category filter - include season data and quantity
+        q = """SELECT v.*, p.ImagePath, p.QuantityAvailable,
+               GROUP_CONCAT(s.SeasonName SEPARATOR ', ') as SeasonName
+               FROM v_productdetails v 
+               JOIN Product p ON v.ProductID = p.ProductID
+               LEFT JOIN product_season ps ON p.ProductID = ps.ProductID
+               LEFT JOIN season s ON ps.SeasonID = s.SeasonID"""
+        params = []
+        where = []
+        if category and category.lower() != 'all':
+            where.append("v.CategoryName=%s"); params.append(category)
+        if where:
+            q += " WHERE " + " AND ".join(where)
+        q += " GROUP BY v.ProductID, v.ProductName, v.Price, v.CategoryName, v.FarmerName, p.ImagePath, p.QuantityAvailable"
+        products = fetchall(q, tuple(params))
+    
     return flask_render("customer/shop.html", products=products)
 
 # CART stored in session
@@ -326,7 +340,7 @@ def cart():
     # load product details
     items = []
     for pid, qty in cart.items():
-        row = fetchone("SELECT ProductID, Name, Price FROM Product WHERE ProductID=%s", (pid,))
+        row = fetchone("SELECT ProductID, Name, Price, QuantityAvailable FROM Product WHERE ProductID=%s", (pid,))
         if row:
             row['quantity'] = qty
             row['subtotal'] = float(row['Price']) * int(qty)
@@ -341,17 +355,52 @@ def checkout():
     customer_id = session['user']['RelatedID']
     cart = session.get('cart', {})
     
+    if not cart:
+        flash("Your cart is empty", "error")
+        return redirect(url_for('customer.shop'))
+    
     # Get loyalty points
     loyalty_points = get_customer_loyalty_points(customer_id)
     
-    # load product details
+    # load product details and check stock availability
     items = []
+    out_of_stock = []
+    insufficient_stock = []
+    
     for pid, qty in cart.items():
-        row = fetchone("SELECT ProductID, Name, Price FROM Product WHERE ProductID=%s", (pid,))
+        row = fetchone("SELECT ProductID, Name, Price, QuantityAvailable FROM Product WHERE ProductID=%s", (pid,))
         if row:
             row['quantity'] = qty
             row['subtotal'] = float(row['Price']) * int(qty)
+            
+            # Check stock availability
+            if row['QuantityAvailable'] == 0:
+                out_of_stock.append(row['Name'])
+            elif row['QuantityAvailable'] < qty:
+                insufficient_stock.append({
+                    'name': row['Name'],
+                    'requested': qty,
+                    'available': row['QuantityAvailable']
+                })
+            
             items.append(row)
+    
+    # If any items are out of stock or insufficient, redirect back to cart with error
+    if out_of_stock or insufficient_stock:
+        error_messages = []
+        
+        if out_of_stock:
+            error_messages.append(f"Out of stock: {', '.join(out_of_stock)}")
+        
+        if insufficient_stock:
+            for item in insufficient_stock:
+                error_messages.append(f"{item['name']}: Only {item['available']} available (you have {item['requested']} in cart)")
+        
+        for msg in error_messages:
+            flash(msg, "error")
+        
+        return redirect(url_for('customer.cart'))
+    
     total = sum(i['subtotal'] for i in items)
     
     # Calculate maximum discount from loyalty points (1 point = ₹1 discount)
@@ -369,8 +418,24 @@ def checkout():
 def cart_add():
     pid = request.form.get('product_id')
     qty = int(request.form.get('quantity', 1))
+    
+    # Check product availability
+    product = fetchone("SELECT QuantityAvailable, Name FROM Product WHERE ProductID=%s", (pid,))
+    if not product:
+        return jsonify({'success': False, 'message': 'Product not found'}), 404
+    
+    # Check current cart quantity
     cart = session.get('cart', {})
-    cart[str(pid)] = cart.get(str(pid), 0) + qty
+    current_qty = cart.get(str(pid), 0)
+    new_total_qty = current_qty + qty
+    
+    if new_total_qty > product['QuantityAvailable']:
+        return jsonify({
+            'success': False, 
+            'message': f'Only {product["QuantityAvailable"]} units of {product["Name"]} available. You already have {current_qty} in cart.'
+        }), 400
+    
+    cart[str(pid)] = new_total_qty
     session['cart'] = cart
     return jsonify({'success': True, 'cartCount': sum(cart.values())})
 
@@ -380,6 +445,18 @@ def cart_add():
 def cart_update():
     pid = request.form.get('product_id')
     qty = int(request.form.get('quantity', 1))
+    
+    # Check product availability
+    product = fetchone("SELECT QuantityAvailable, Name FROM Product WHERE ProductID=%s", (pid,))
+    if not product:
+        return jsonify({'success': False, 'message': 'Product not found'}), 404
+    
+    if qty > product['QuantityAvailable']:
+        return jsonify({
+            'success': False, 
+            'message': f'Only {product["QuantityAvailable"]} units of {product["Name"]} available'
+        }), 400
+    
     cart = session.get('cart', {})
     if qty <= 0:
         cart.pop(str(pid), None)
@@ -392,7 +469,7 @@ def cart_update():
 @login_required
 @role_required("Customer")
 def order_place():
-    from database import execute
+    from database import execute, get_conn
     cart = session.get('cart', {})
     if not cart:
         return jsonify({'success': False, 'message': 'Cart empty'}), 400
@@ -401,6 +478,17 @@ def order_place():
     
     # Get loyalty points to use from the request
     loyalty_points_used = int(request.form.get('loyalty_points_used', 0))
+    
+    # First, check all products have sufficient stock
+    for pid, qty in cart.items():
+        product = fetchone("SELECT QuantityAvailable, Name FROM Product WHERE ProductID=%s", (pid,))
+        if not product:
+            return jsonify({'success': False, 'message': f'Product ID {pid} not found'}), 404
+        if product['QuantityAvailable'] < qty:
+            return jsonify({
+                'success': False, 
+                'message': f'Insufficient stock for {product["Name"]}. Only {product["QuantityAvailable"]} available.'
+            }), 400
     
     # Calculate cart total
     cart_total = 0
@@ -413,30 +501,57 @@ def order_place():
     discount = min(loyalty_points_used, cart_total)
     final_total = cart_total - discount
     
-    # Place orders for each product
-    order_ids = []
-    for pid, qty in cart.items():
-        order_id = place_order_proc(customer_id, int(pid), int(qty))
-        order_ids.append(order_id)
+    # Use a transaction to ensure atomicity
+    cnx = get_conn()
+    cursor = cnx.cursor()
     
-    # Update the last order total to reflect the discount
-    # (In a real system, you'd want to distribute the discount proportionally or track it separately)
-    if order_ids and discount > 0:
-        # Update the total of the first order to include the discount
-        execute("""
-            UPDATE orders 
-            SET TotalAmount = TotalAmount - %s 
-            WHERE OrderID = %s
-        """, (discount, order_ids[0]))
-    
-    session.pop('cart', None)
-    
-    return jsonify({
-        'success': True, 
-        'order_ids': order_ids,
-        'discount_applied': discount,
-        'final_total': final_total
-    })
+    try:
+        # Place orders for each product and deduct stock
+        order_ids = []
+        for pid, qty in cart.items():
+            # Place order using stored procedure
+            cursor.callproc('PlaceOrder', (customer_id, int(pid), int(qty), 0))
+            cnx.commit()
+            
+            # Get the order ID
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            order_id = cursor.fetchone()[0]
+            order_ids.append(order_id)
+            
+            # Deduct quantity from product stock
+            cursor.execute("""
+                UPDATE Product 
+                SET QuantityAvailable = QuantityAvailable - %s 
+                WHERE ProductID = %s
+            """, (qty, int(pid)))
+            cnx.commit()
+        
+        # Update the last order total to reflect the discount
+        if order_ids and discount > 0:
+            cursor.execute("""
+                UPDATE orders 
+                SET TotalAmount = TotalAmount - %s 
+                WHERE OrderID = %s
+            """, (discount, order_ids[0]))
+            cnx.commit()
+        
+        cursor.close()
+        cnx.close()
+        
+        session.pop('cart', None)
+        
+        return jsonify({
+            'success': True, 
+            'order_ids': order_ids,
+            'discount_applied': discount,
+            'final_total': final_total
+        })
+        
+    except Exception as e:
+        cnx.rollback()
+        cursor.close()
+        cnx.close()
+        return jsonify({'success': False, 'message': f'Error placing order: {str(e)}'}), 500
 
 @customer_bp.route("/review/add", methods=["POST"])
 @login_required

@@ -59,17 +59,26 @@
           <p class="text-xs text-gray-500 mt-1">Price per unit/kg</p>
         </div>
 
-        <!-- Freshness -->
+        <!-- Initial Quantity -->
         <div>
-          <label class="block text-sm font-semibold text-gray-900 mb-2">Freshness</label>
-          <select name="freshness" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
-            <option value="Fresh">🌱 Fresh</option>
-            <option value="Good">✓ Good</option>
-            <option value="Premium">⭐ Premium</option>
-            <option value="Organic">🍃 Organic</option>
-          </select>
-          <p class="text-xs text-gray-500 mt-1">Quality/freshness level</p>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">Initial Stock Quantity *</label>
+          <input type="number" name="quantity" placeholder="e.g., 100" min="0" value="100"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">Number of units available</p>
         </div>
+      </div>
+
+      <!-- Freshness -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-900 mb-2">Freshness</label>
+        <select name="freshness" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+          <option value="Fresh">🌱 Fresh</option>
+          <option value="Good">✓ Good</option>
+          <option value="Premium">⭐ Premium</option>
+          <option value="Organic">🍃 Organic</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Quality/freshness level</p>
       </div>
 
       <!-- Info Box -->
@@ -78,7 +87,7 @@
           <i class="fas fa-info-circle text-blue-600 text-xl flex-shrink-0 mt-0.5"></i>
           <div>
             <h3 class="font-semibold text-blue-900 mb-1">Product Information</h3>
-            <p class="text-sm text-blue-800">After adding your product, you can manage prices from the products page. Customers will see your product in the marketplace based on the selected category and season.</p>
+            <p class="text-sm text-blue-800">Set your initial stock quantity. You can update stock levels anytime from the products page using the restock feature. Customers can only order products that are in stock.</p>
           </div>
         </div>
       </div>

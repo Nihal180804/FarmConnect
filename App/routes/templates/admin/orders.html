@@ -28,9 +28,14 @@
             <td class="px-6 py-4 text-gray-900">{{ order.customer_name or 'Unknown' }}</td>
             <td class="px-6 py-4 text-gray-700 text-sm">{{ order.OrderDate or 'N/A' }}</td>
             <td class="px-6 py-4">
-              <span class="inline-block {{ 'bg-blue-100 text-blue-700' if order.Status == 'Processing' else 'bg-green-100 text-green-700' if order.Status == 'Delivered' else 'bg-yellow-100 text-yellow-700' if order.Status == 'Shipped' else 'bg-gray-100 text-gray-700' }} px-4 py-1 rounded-lg text-sm font-semibold">
-                {{ order.Status or 'Pending' }}
-              </span>
+              <select class="status-select inline-block {{ 'bg-blue-100 text-blue-700' if order.Status == 'Processing' else 'bg-green-100 text-green-700' if order.Status == 'Delivered' or order.Status == 'Completed' else 'bg-yellow-100 text-yellow-700' if order.Status == 'Shipped' else 'bg-orange-100 text-orange-700' if order.Status == 'Pending' else 'bg-gray-100 text-gray-700' }} px-4 py-2 rounded-lg text-sm font-semibold border-none cursor-pointer" data-order-id="{{ order.OrderID }}" onchange="updateOrderStatus(this)">
+                <option value="Pending" {{ 'selected' if order.Status == 'Pending' else '' }}>Pending</option>
+                <option value="Processing" {{ 'selected' if order.Status == 'Processing' else '' }}>Processing</option>
+                <option value="Shipped" {{ 'selected' if order.Status == 'Shipped' else '' }}>Shipped</option>
+                <option value="Delivered" {{ 'selected' if order.Status == 'Delivered' else '' }}>Delivered</option>
+                <option value="Completed" {{ 'selected' if order.Status == 'Completed' else '' }}>Completed</option>
+                <option value="Cancelled" {{ 'selected' if order.Status == 'Cancelled' else '' }}>Cancelled</option>
+              </select>
             </td>
             <td class="px-6 py-4 text-gray-900 font-bold">₹{{ "%.2f"|format(order.computed_total|float) if order.computed_total else '0.00' }}</td>
             <td class="px-6 py-4">
@@ -47,5 +52,69 @@
     </div>
   </div>
 </div>
+
+<script>
+async function updateOrderStatus(selectElement) {
+  const orderId = selectElement.getAttribute('data-order-id');
+  const newStatus = selectElement.value;
+  const oldClass = selectElement.className;
+  
+  // Update select styling based on status
+  selectElement.className = 'status-select inline-block px-4 py-2 rounded-lg text-sm font-semibold border-none cursor-pointer ';
+  if (newStatus === 'Pending') {
+    selectElement.className += 'bg-orange-100 text-orange-700';
+  } else if (newStatus === 'Processing') {
+    selectElement.className += 'bg-blue-100 text-blue-700';
+  } else if (newStatus === 'Shipped') {
+    selectElement.className += 'bg-yellow-100 text-yellow-700';
+  } else if (newStatus === 'Delivered' || newStatus === 'Completed') {
+    selectElement.className += 'bg-green-100 text-green-700';
+  } else if (newStatus === 'Cancelled') {
+    selectElement.className += 'bg-red-100 text-red-700';
+  } else {
+    selectElement.className += 'bg-gray-100 text-gray-700';
+  }
+  
+  try {
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', newStatus);
+    
+    const response = await fetch('{{ url_for("admin.update_order_status_route") }}', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Show success notification
+      showNotification('Order status updated successfully!', 'success');
+    } else {
+      // Revert on error
+      alert('Failed to update order status: ' + (result.error || 'Unknown error'));
+      selectElement.className = oldClass;
+    }
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('An error occurred while updating order status');
+    selectElement.className = oldClass;
+  }
+}
+
+function showNotification(message, type) {
+  const notification = document.createElement('div');
+  notification.className = `fixed top-4 right-4 z-50 ${type === 'success' ? 'bg-emerald-500' : 'bg-red-500'} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-pulse`;
+  notification.innerHTML = `
+    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+</script>
 
 {% endblock %}

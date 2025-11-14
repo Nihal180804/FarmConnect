@@ -10,33 +10,80 @@
   <!-- Metrics Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- Total Products -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Products</h3>
-      <div class="text-4xl font-bold text-emerald-600">{{ overview.TotalProducts or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Products listed</p>
+    <div class="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Total Products</h3>
+        <i class="fas fa-boxes text-3xl opacity-50"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ overview.TotalProducts or 0 }}</div>
+      <p class="text-emerald-100 text-sm mt-2">Products listed</p>
+    </div>
+
+    <!-- Total Stock -->
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Total Stock</h3>
+        <i class="fas fa-warehouse text-3xl opacity-50"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ overview.TotalStock or 0 }}</div>
+      <p class="text-blue-100 text-sm mt-2">Units available</p>
     </div>
 
     <!-- Total Orders -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Orders</h3>
-      <div class="text-4xl font-bold text-blue-600">{{ overview.TotalOrders or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Orders received</p>
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Total Orders</h3>
+        <i class="fas fa-shopping-cart text-3xl opacity-50"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ overview.TotalOrders or 0 }}</div>
+      <p class="text-purple-100 text-sm mt-2">Orders received</p>
     </div>
 
     <!-- Total Revenue -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Revenue</h3>
-      <div class="text-3xl font-bold text-emerald-600">₹{{ overview.TotalRevenue or '0.00' }}</div>
-      <p class="text-gray-600 text-sm mt-2">Revenue generated</p>
-    </div>
-
-    <!-- Average Rating -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Avg. Rating</h3>
-      <div class="text-4xl font-bold text-yellow-600">{{ overview.AverageProductRating or '0.0' }} ★</div>
-      <p class="text-gray-600 text-sm mt-2">Product rating</p>
+    <div class="bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Total Revenue</h3>
+        <i class="fas fa-rupee-sign text-3xl opacity-50"></i>
+      </div>
+      <div class="text-3xl font-bold">₹{{ overview.TotalRevenue or '0.00' }}</div>
+      <p class="text-amber-100 text-sm mt-2">Revenue generated</p>
     </div>
   </div>
+
+  <!-- Stock Alerts -->
+  {% if overview.LowStockCount > 0 or overview.OutOfStockCount > 0 %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% if overview.OutOfStockCount > 0 %}
+    <div class="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+        <div>
+          <h3 class="text-xl font-bold text-red-900">Out of Stock Alert!</h3>
+          <p class="text-red-700 mt-1">{{ overview.OutOfStockCount }} product(s) are out of stock</p>
+          <a href="{{ url_for('farmer.products') }}" class="inline-block mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors">
+            <i class="fas fa-plus mr-2"></i>Restock Now
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    {% if overview.LowStockCount > 0 %}
+    <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-exclamation-circle text-amber-600 text-3xl"></i>
+        <div>
+          <h3 class="text-xl font-bold text-amber-900">Low Stock Warning</h3>
+          <p class="text-amber-700 mt-1">{{ overview.LowStockCount }} product(s) running low (≤10 units)</p>
+          <a href="{{ url_for('farmer.products') }}" class="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors">
+            <i class="fas fa-eye mr-2"></i>View Products
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
 
   <!-- Charts Section -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -77,6 +124,7 @@
           <tr>
             <th class="px-6 py-4 text-left text-sm font-semibold">Product</th>
             <th class="px-6 py-4 text-left text-sm font-semibold">Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Stock</th>
             <th class="px-6 py-4 text-left text-sm font-semibold">Units Sold</th>
             <th class="px-6 py-4 text-left text-sm font-semibold">Revenue</th>
           </tr>
@@ -86,6 +134,18 @@
           <tr class="hover:bg-amber-50 transition-colors">
             <td class="px-6 py-4 text-gray-900 font-medium">{{ p.ProductName }}</td>
             <td class="px-6 py-4 text-gray-900">₹{{ p.Price }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg {% if p.QuantityAvailable == 0 %}text-red-600{% elif p.QuantityAvailable <= 10 %}text-amber-600{% else %}text-green-600{% endif %}">
+                  {{ p.QuantityAvailable }}
+                </span>
+                {% if p.QuantityAvailable == 0 %}
+                <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-bold">OUT</span>
+                {% elif p.QuantityAvailable <= 10 %}
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-bold">LOW</span>
+                {% endif %}
+              </div>
+            </td>
             <td class="px-6 py-4 text-gray-900">{{ p.TotalUnitsSold }}</td>
             <td class="px-6 py-4 text-gray-900 font-bold">₹{{ p.ProductRevenue }}</td>
           </tr>
