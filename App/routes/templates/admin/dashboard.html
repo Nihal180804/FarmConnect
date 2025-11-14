@@ -10,43 +10,76 @@
   <!-- Metrics Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     <!-- Farmers Card -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Farmers</h3>
-        <i class="fas fa-user-farmer text-emerald-500 text-2xl"></i>
+        <h3 class="text-lg font-semibold">Farmers</h3>
+        <i class="fas fa-user-farmer text-3xl opacity-70"></i>
       </div>
-      <div class="text-4xl font-bold text-emerald-600">{{ totals.farmers or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Total registered farmers</p>
+      <div class="text-4xl font-bold">{{ totals.farmers or 0 }}</div>
+      <p class="text-emerald-100 text-sm mt-2">Total registered farmers</p>
     </div>
     
     <!-- Customers Card -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Customers</h3>
-        <i class="fas fa-users text-blue-500 text-2xl"></i>
+        <h3 class="text-lg font-semibold">Customers</h3>
+        <i class="fas fa-users text-3xl opacity-70"></i>
       </div>
-      <div class="text-4xl font-bold text-blue-600">{{ totals.customers or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Total registered customers</p>
+      <div class="text-4xl font-bold">{{ totals.customers or 0 }}</div>
+      <p class="text-blue-100 text-sm mt-2">Total registered customers</p>
     </div>
     
     <!-- Products Card -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Products</h3>
-        <i class="fas fa-leaf text-green-500 text-2xl"></i>
+        <h3 class="text-lg font-semibold">Products</h3>
+        <i class="fas fa-leaf text-3xl opacity-70"></i>
       </div>
-      <div class="text-4xl font-bold text-green-600">{{ totals.products or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Total products listed</p>
+      <div class="text-4xl font-bold">{{ totals.products or 0 }}</div>
+      <p class="text-purple-100 text-sm mt-2">Total products listed</p>
     </div>
     
     <!-- Orders Card -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Orders</h3>
-        <i class="fas fa-shopping-bag text-orange-500 text-2xl"></i>
+        <h3 class="text-lg font-semibold">Orders</h3>
+        <i class="fas fa-shopping-bag text-3xl opacity-70"></i>
       </div>
-      <div class="text-4xl font-bold text-orange-600">{{ totals.orders or 0 }}</div>
-      <p class="text-gray-600 text-sm mt-2">Total orders placed</p>
+      <div class="text-4xl font-bold">{{ totals.orders or 0 }}</div>
+      <p class="text-orange-100 text-sm mt-2">Total orders placed</p>
+    </div>
+  </div>
+
+  <!-- Inventory Stats Row -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Total Stock -->
+    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Total Stock</h3>
+        <i class="fas fa-warehouse text-3xl opacity-70"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ totals.total_stock or 0 }}</div>
+      <p class="text-green-100 text-sm mt-2">Units available across all products</p>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Low Stock</h3>
+        <i class="fas fa-exclamation-triangle text-3xl opacity-70"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ totals.low_stock_count or 0 }}</div>
+      <p class="text-amber-100 text-sm mt-2">Products with ≤10 units</p>
+    </div>
+
+    <!-- Out of Stock -->
+    <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg border border-gray-200 p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Out of Stock</h3>
+        <i class="fas fa-ban text-3xl opacity-70"></i>
+      </div>
+      <div class="text-4xl font-bold">{{ totals.out_of_stock_count or 0 }}</div>
+      <p class="text-red-100 text-sm mt-2">Products with 0 units</p>
     </div>
   </div>
 
@@ -65,6 +98,9 @@
   <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
     <h3 class="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
     <div class="flex flex-wrap gap-3">
+      <a href="{{ url_for('admin.inventory') }}" class="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all font-semibold shadow-md">
+        <i class="fas fa-warehouse mr-2"></i>Inventory Management
+      </a>
       <a href="{{ url_for('admin.farmers') }}" class="inline-block px-6 py-3 border-2 border-emerald-500 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-all font-semibold">
         <i class="fas fa-list mr-2"></i>View Farmers
       </a>

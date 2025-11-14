@@ -47,10 +47,38 @@
       </div>
     </div>
 
+    <!-- Season Filter Buttons -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-sm font-semibold text-gray-700">Filter by Season:</span>
+        <button onclick="filterBySeason('all')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-emerald-500 text-white shadow-md hover:bg-emerald-600 active" data-season="all">
+          <i class="fas fa-leaf mr-2"></i>All Seasons
+        </button>
+        <button onclick="filterBySeason('Summer')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-orange-300 text-orange-600 hover:bg-orange-50" data-season="summer">
+          <i class="fas fa-sun mr-2"></i>Summer
+        </button>
+        <button onclick="filterBySeason('Winter')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-blue-300 text-blue-600 hover:bg-blue-50" data-season="winter">
+          <i class="fas fa-snowflake mr-2"></i>Winter
+        </button>
+        <button onclick="filterBySeason('Monsoon')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-teal-300 text-teal-600 hover:bg-teal-50" data-season="monsoon">
+          <i class="fas fa-cloud-rain mr-2"></i>Monsoon
+        </button>
+        <button onclick="filterBySeason('Spring')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-pink-300 text-pink-600 hover:bg-pink-50" data-season="spring">
+          <i class="fas fa-seedling mr-2"></i>Spring
+        </button>
+        <button onclick="filterBySeason('Autumn')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-amber-300 text-amber-600 hover:bg-amber-50" data-season="autumn">
+          <i class="fas fa-leaf-maple mr-2"></i>Autumn
+        </button>
+        <button onclick="filterBySeason('Year-Round')" class="season-btn px-6 py-2 rounded-full font-semibold transition-all bg-white border-2 border-purple-300 text-purple-600 hover:bg-purple-50" data-season="year-round">
+          <i class="fas fa-calendar mr-2"></i>Year-Round
+        </button>
+      </div>
+    </div>
+
     <!-- Products Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="productsGrid">
       {% for p in products %}
-      <div class="product-card group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200" data-category="{{ p.CategoryName|lower if p.CategoryName else 'other' }}" data-price="{{ p.Price }}" data-rating="4.5" data-name="{{ p.ProductName|lower }}">
+      <div class="product-card group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200" data-category="{{ p.CategoryName|lower if p.CategoryName else 'other' }}" data-price="{{ p.Price }}" data-rating="4.5" data-name="{{ p.ProductName|lower }}" data-season="{{ p.SeasonName|lower if p.SeasonName else 'all year' }}">
         
         <!-- Product Image Container -->
         <div class="relative w-full h-48 bg-gradient-to-br from-green-100 to-emerald-50 overflow-hidden">
@@ -95,17 +123,33 @@
             <span class="text-xs text-gray-600">(18)</span>
           </div>
 
+          <!-- Stock Level -->
+          <div class="flex items-center gap-2 {% if p.QuantityAvailable <= 10 %}text-red-600{% elif p.QuantityAvailable <= 50 %}text-amber-600{% else %}text-green-600{% endif %}">
+            <i class="fas fa-box text-sm"></i>
+            <span class="text-sm font-semibold">
+              {% if p.QuantityAvailable == 0 %}
+                Out of Stock
+              {% elif p.QuantityAvailable <= 10 %}
+                Only {{ p.QuantityAvailable }} left!
+              {% elif p.QuantityAvailable <= 50 %}
+                {{ p.QuantityAvailable }} available
+              {% else %}
+                In Stock ({{ p.QuantityAvailable }})
+              {% endif %}
+            </span>
+          </div>
+
           <!-- Divider -->
           <div class="border-t border-amber-200"></div>
 
           <!-- Add to Cart -->
-          <form method="post" action="{{ url_for('customer.cart_add') }}" class="add-to-cart-form flex gap-2 pt-2" data-product-id="{{ p.ProductID }}">
+          <form method="post" action="{{ url_for('customer.cart_add') }}" class="add-to-cart-form flex gap-2 pt-2" data-product-id="{{ p.ProductID }}" data-available="{{ p.QuantityAvailable }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="product_id" value="{{ p.ProductID }}">
-            <input type="number" name="quantity" value="1" min="1" class="w-16 px-2 py-2 border border-amber-300 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white bg-opacity-60">
-            <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2">
+            <input type="number" name="quantity" value="1" min="1" max="{{ p.QuantityAvailable }}" class="w-16 px-2 py-2 border border-amber-300 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white bg-opacity-60" {% if p.QuantityAvailable == 0 %}disabled{% endif %}>
+            <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2" {% if p.QuantityAvailable == 0 %}disabled{% endif %}>
               <i class="fas fa-shopping-cart"></i>
-              <span>Add</span>
+              <span>{% if p.QuantityAvailable == 0 %}Sold Out{% else %}Add{% endif %}</span>
             </button>
           </form>
         </div>
@@ -157,6 +201,28 @@ document.getElementById('topCategory')?.addEventListener('change', filterAndSort
 document.getElementById('topPrice')?.addEventListener('change', filterAndSort);
 document.getElementById('topSort')?.addEventListener('change', filterAndSort);
 
+// Season filter functionality
+let currentSeason = 'all';
+
+function filterBySeason(season) {
+  currentSeason = season.toLowerCase();
+  
+  console.log('Filtering by season:', currentSeason);
+  
+  // Update button styles
+  document.querySelectorAll('.season-btn').forEach(btn => {
+    if (btn.getAttribute('data-season').toLowerCase() === currentSeason) {
+      btn.classList.remove('bg-white', 'border-2');
+      btn.classList.add('bg-emerald-500', 'text-white', 'shadow-md', 'active');
+    } else {
+      btn.classList.add('bg-white', 'border-2');
+      btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-md', 'active');
+    }
+  });
+  
+  filterAndSort();
+}
+
 function filterAndSort() {
   const topCategory = document.getElementById('topCategory')?.value || 'all';
   const category = (topCategory && topCategory !== 'all') ? topCategory : 'all';
@@ -175,12 +241,24 @@ function filterAndSort() {
     const cardCategory = card.getAttribute('data-category') || '';
     const cardPrice = parseFloat(card.getAttribute('data-price')) || 0;
     const cardName = (card.getAttribute('data-name') || '').toLowerCase();
+    const cardSeason = (card.getAttribute('data-season') || '').toLowerCase();
+    
+    console.log('Card:', cardName, 'Season:', cardSeason, 'Looking for:', currentSeason);
     
     const categoryMatch = category === 'all' || cardCategory === category;
     const priceMatch = cardPrice <= maxPrice;
     const searchMatch = !searchTerm || cardName.includes(searchTerm);
     
-    if (categoryMatch && priceMatch && searchMatch) {
+    // Season matching: check if the card's season string contains the selected season
+    let seasonMatch = currentSeason === 'all';
+    if (!seasonMatch) {
+      // Check if the product's season list contains the selected season or is year-round
+      seasonMatch = cardSeason.includes(currentSeason) || cardSeason.includes('year-round');
+    }
+    
+    console.log('  -> Match?', seasonMatch, 'Category:', categoryMatch, 'Price:', priceMatch, 'Search:', searchMatch);
+    
+    if (categoryMatch && priceMatch && searchMatch && seasonMatch) {
       matchedCards.push(card);
       card.style.display = '';
     } else {
@@ -293,7 +371,7 @@ document.querySelectorAll('.add-to-cart-form').forEach(form => {
           btn.disabled = false;
         }, 2000);
       } else {
-        alert('Error adding to cart');
+        alert(data.message || 'Error adding to cart');
         btnText.textContent = originalText;
         btn.disabled = false;
       }

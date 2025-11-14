@@ -122,3 +122,30 @@ def get_customer_loyalty_points(customer_id):
     cursor.close()
     cnx.close()
     return r[0] if r else 0
+
+def get_seasonal_products(season_name=None):
+    """Get seasonal products using GetSeasonalProducts stored procedure"""
+    cnx = get_conn()
+    cursor = cnx.cursor(dictionary=True)
+    cursor.callproc('GetSeasonalProducts', (season_name,))
+    products = []
+    for result in cursor.stored_results():
+        products = result.fetchall()
+    cursor.close()
+    cnx.close()
+    return products
+
+def update_order_status(order_id, new_status):
+    """Update order status using UpdateOrderStatus stored procedure"""
+    cnx = get_conn()
+    cursor = cnx.cursor()
+    try:
+        cursor.callproc('UpdateOrderStatus', (order_id, new_status))
+        cnx.commit()
+        return {'success': True, 'message': 'Order status updated successfully'}
+    except mysql.connector.Error as e:
+        cnx.rollback()
+        return {'success': False, 'error': str(e)}
+    finally:
+        cursor.close()
+        cnx.close()

@@ -44,11 +44,44 @@ def dashboard():
     # gather metrics
     total_products_row = fetchone("SELECT GetFarmerProductCount(%s) AS total", (farmer_id,))
     total_products = total_products_row['total'] if total_products_row else 0
+    
+    # Get total stock quantity
+    total_stock_row = fetchone("""
+        SELECT COALESCE(SUM(QuantityAvailable), 0) as TotalStock,
+               COALESCE(SUM(CASE WHEN QuantityAvailable <= 10 THEN 1 ELSE 0 END), 0) as LowStockCount,
+               COALESCE(SUM(CASE WHEN QuantityAvailable = 0 THEN 1 ELSE 0 END), 0) as OutOfStockCount
+        FROM product 
+        WHERE FarmerID = %s
+    """, (farmer_id,))
+    
     # total orders and revenue via GetFarmerReport
     farmer_report = get_farmer_report(farmer_id)
     overview = farmer_report[0][0] if farmer_report and farmer_report[0] else {}
     product_rows = farmer_report[1] if farmer_report and len(farmer_report) > 1 else []
-    return flask_render("farmer/dashboard.html", overview=overview, products=product_rows, total_products=total_products)
+    
+    # Add stock information to overview
+    if total_stock_row:
+        overview['TotalStock'] = total_stock_row['TotalStock']
+        overview['LowStockCount'] = total_stock_row['LowStockCount']
+        overview['OutOfStockCount'] = total_stock_row['OutOfStockCount']
+    
+    # Enhance product rows with quantity
+    enhanced_products = fetchall("""
+        SELECT 
+            p.Name as ProductName,
+            p.Price,
+            p.QuantityAvailable,
+            COALESCE(SUM(op.Quantity), 0) as TotalUnitsSold,
+            COALESCE(SUM(o.TotalAmount), 0) as ProductRevenue
+        FROM product p
+        LEFT JOIN order_product op ON p.ProductID = op.ProductID
+        LEFT JOIN orders o ON op.OrderID = o.OrderID
+        WHERE p.FarmerID = %s
+        GROUP BY p.ProductID, p.Name, p.Price, p.QuantityAvailable
+        ORDER BY ProductRevenue DESC
+    """, (farmer_id,))
+    
+    return flask_render("farmer/dashboard.html", overview=overview, products=enhanced_products, total_products=total_products)
 
 @farmer_bp.route("/products")
 @login_required
@@ -62,6 +95,7 @@ def products():
             p.Name as ProductName,
             c.CategoryName as Category,
             p.Price,
+            p.QuantityAvailable,
             GROUP_CONCAT(s.SeasonName SEPARATOR ', ') as Season,
             p.Freshness,
             (SELECT COALESCE(SUM(op.Quantity), 0) FROM order_product op WHERE op.ProductID=p.ProductID) as Quantity,
@@ -72,7 +106,7 @@ def products():
         LEFT JOIN product_season ps ON p.ProductID = ps.ProductID
         LEFT JOIN season s ON ps.SeasonID = s.SeasonID
         WHERE p.FarmerID=%s
-        GROUP BY p.ProductID, p.FarmerID, p.Name, c.CategoryName, p.Price, p.Freshness
+        GROUP BY p.ProductID, p.FarmerID, p.Name, c.CategoryName, p.Price, p.QuantityAvailable, p.Freshness
         ORDER BY p.ProductID DESC
     """, (farmer_id,))
     return flask_render("farmer/products.html", products=rows)
@@ -88,6 +122,45 @@ def edit_price():
     try:
         execute("UPDATE product SET Price=%s WHERE ProductID=%s", (new_price, product_id))
         return jsonify({'success': True, 'message': 'Price updated'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@farmer_bp.route("/product/restock", methods=["POST"])
+@login_required
+@role_required("Farmer")
+def restock_product():
+    """Add quantity to product stock"""
+    product_id = request.form.get('product_id')
+    quantity_to_add = request.form.get('quantity')
+    
+    if not product_id or not quantity_to_add:
+        return jsonify({'success': False, 'message': 'Missing fields'}), 400
+    
+    farmer_id = session['user']['RelatedID']
+    
+    # Verify product belongs to this farmer
+    prod = fetchone("SELECT FarmerID, Name, QuantityAvailable FROM product WHERE ProductID=%s", (product_id,))
+    if not prod or prod['FarmerID'] != farmer_id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        quantity_to_add = int(quantity_to_add)
+        if quantity_to_add <= 0:
+            return jsonify({'success': False, 'message': 'Quantity must be positive'}), 400
+        
+        execute("""
+            UPDATE product 
+            SET QuantityAvailable = QuantityAvailable + %s 
+            WHERE ProductID = %s
+        """, (quantity_to_add, product_id))
+        
+        new_quantity = prod['QuantityAvailable'] + quantity_to_add
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Added {quantity_to_add} units to {prod["Name"]}',
+            'new_quantity': new_quantity
+        })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -119,6 +192,7 @@ def add_product():
         product_name = request.form.get('product_name', '').strip()
         category_id = request.form.get('category_id', '').strip()
         price = request.form.get('price', '').strip()
+        quantity = request.form.get('quantity', '100').strip()
         season_id = request.form.get('season_id', '').strip()
         freshness = request.form.get('freshness', 'Fresh').strip()
         
@@ -129,11 +203,16 @@ def add_product():
         
         try:
             price = float(price)
+            quantity = int(quantity)
             category_id = int(category_id)
             season_id = int(season_id)
             
             if price < 0:
                 flash("Price must be positive", "danger")
+                return flask_render("farmer/add_product.html", categories=categories, seasons=seasons)
+            
+            if quantity < 0:
+                flash("Quantity must be positive", "danger")
                 return flask_render("farmer/add_product.html", categories=categories, seasons=seasons)
             
             # Validate category exists
@@ -148,10 +227,10 @@ def add_product():
                 flash("Invalid season selected", "danger")
                 return flask_render("farmer/add_product.html", categories=categories, seasons=seasons)
             
-            # Insert product
+            # Insert product with quantity
             product_id = execute(
-                "INSERT INTO product (FarmerID, Name, Price, Freshness, CategoryID) VALUES (%s, %s, %s, %s, %s)",
-                (farmer_id, product_name, price, freshness, category_id)
+                "INSERT INTO product (FarmerID, Name, Price, Freshness, CategoryID, QuantityAvailable) VALUES (%s, %s, %s, %s, %s, %s)",
+                (farmer_id, product_name, price, freshness, category_id, quantity)
             )
             
             # Link product with season
@@ -172,14 +251,6 @@ def add_product():
     
     # GET request - show the form
     return flask_render("farmer/add_product.html", categories=categories, seasons=seasons)
-
-@farmer_bp.route("/product/restock/<int:product_id>", methods=["POST"])
-@login_required
-@role_required("Farmer")
-def restock_product(product_id):
-    # Note: This schema doesn't use direct quantity tracking on products
-    # Quantities are managed through orders. This endpoint is deprecated.
-    return jsonify({'success': False, 'message': 'Restock not supported in this version'}), 400
 
 @farmer_bp.route("/sales_report")
 @login_required
